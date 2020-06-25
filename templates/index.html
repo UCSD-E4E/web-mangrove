@@ -1,17 +1,63 @@
+
+
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>{{ title }} - Mangrove Classification</title>
-    </head>
+   <head>
+     <title>Mangrove Classification </title>
 
-    <body>
-        <h1><p style="text-align:center">Welcome to the Mangrove Classification Application</p></h1>
+     <meta name="viewport" content="width=device-width,
+        initial-scale=1">
+      
+     <link rel="stylesheet" href=
+"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  
+   </head>
 
-        <h2> Description: </h2>
+   <body>
+      <div class="container bg-success">
+          <br>
+         <center>
+            <h1 class="hidden-xs">Mangrove Classification Application</h1>
+        </center>
+         <br>
+      </div>
+      
+      <br>
+      <br>
 
-        <p>This application allows you to classify the mangroves based on the .tif file uploaded. To upload file, click the link below to get started c</p>
-        
-        <a style="text-align:center" href="/upload">Go to Upload Page</a>
+      <div class="container">
+        <div class="row">
+           <div class="col-sm-6">
+              <h3> 1. Upload Files </h3>
+              <p> Directions: Upload the .zip or .tif file to classify </p>
+              
+              <input type="file" id="myFile">
+              <br>
+              <input type="button" id="uploadFile" value= "Upload File">
+              
+           </div>
+           <div class="col-sm-6">
+                <h3> 2. Classify </h3>
+                <p> Directions: Once the file is uploaded, click below to classify the images </p>
+                
+                <br>
+                <input type="button" id="classify_btn" value= "Classify Images">
+                
+           </div>
+        </div>
+     </div>
 
+      <br>
+      
+      <div class="container">
+         <div class="row">
+            <div class="col-sm-12">
+                <h3> 3. Visualize the Classification </h3>                
+            </div>
 
-    </body>
-</html>
+         </div>
+      </div>
+      
+      <br>
+      
+   
