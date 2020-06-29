@@ -29,20 +29,30 @@
         <div class="row">
            <div class="col-sm-6">
               <h3> 1. Upload Files </h3>
-              <p> Directions: Upload the .zip or .tif file to classify </p>
+              <p> Directions: Upload the .zip file to classify (future: accepting .tif files later) </p>
               
               <input type="file" id="myFile">
               <br>
-              <input type="button" id="uploadFile" value= "Upload File">
+            <form action="upload" method="get">
+               <input type="submit" value="Upload File">
+            </form>
               
            </div>
            <div class="col-sm-6">
                 <h3> 2. Classify </h3>
-                <p> Directions: Once the file is uploaded, click below to classify the images </p>
+                <p> Directions: Once the file is uploaded, click below to classify the images. Important: Download and delete the files before closing this tab</p>
                 
                 <br>
-                <input type="button" id="classify_btn" value= "Classify Images">
-                
+
+                <form action="classify" method="get" onsubmit="return validate()">
+                  <input type="text" name="author" id="authorInput">
+                  <input type="submit" value="Classify Images">
+                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+                  <!-- loading icon but currently hidden-->
+                  <div id="loading" style= "visibility: hidden;color:#b76e79;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
+
+               </form>
+               <!-- if you want to pass a variable to the server name = variable name-->                
            </div>
         </div>
      </div>
@@ -54,10 +64,50 @@
             <div class="col-sm-12">
                 <h3> 3. Visualize the Classification </h3>                
             </div>
+         </div>
+         
+         <div class="col-sm-4">
+            <img src="/static/images/0.jpg" alt ='' width="100%">
+            <h4> Non-mangrove Classification</h4>             
+         </div>
+         
+        
+         <div class="col-sm-4">
+            <img src="/static/images/1.jpg" alt ='' width="100%">
+            <h4> Mangrove Classification</h4>               
+         </div>
+   
+         <div class="col-sm-4">
+            <img src="../p.jpg" alt ='' width='100%'>    
+            <h4> Class Probabilities </h4>           
+        </div>
+      </div>
 
+      <div class="container">
+         <div class="row">
+            <div class="col-sm-12">
+                <h3> 4. Download </h3>    
+                <form action="download" method="get">
+                  <input type="submit" value="Download (only deletes the files now so you can upload again)">
+               </form>     
+            </div>
          </div>
       </div>
+
+      
       
       <br>
       
+      <script>     
+         function validate()
+         {  
+            if (confirm("Do you want to classify the images from Orto_Puerto_Gata_Tiles.zip?"))
+            {
+               return true;
+            }
+            else{
+               return false;
+            }            
+         }
+      </script>
    

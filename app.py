@@ -1,38 +1,59 @@
 import os
 import sys
-from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, make_response, flash, request, redirect, url_for, send_from_directory
 from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField,validators
 from wtforms.validators import DataRequired
 from retile import Retile
 from celery import Celery
 
+from tqdm.autonotebook import tqdm
+import tensorflow as tf
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import rasterio
+import subprocess
+
+from descartes import PolygonPatch
+from rasterio.plot import show
+import matplotlib as mpl
+import geopandas
+import fiona
+
+from PIL import Image
+import PIL
+PIL.Image.MAX_IMAGE_PIXELS = None
+
+from tensorflow.keras.models import load_model
+
+#Set model location
+output_file = "results.csv"
+#store the model
+
+# TO DO: ADD OS FUNCTIONS TO MAKE IT RUN ON ANYONE'S COMPUTER
+print('main_directory from OS: ', os.path.dirname(os.path.realpath(__file__)))
+
+# overall directory where all files and folders are stored 
+main_directory = os.path.dirname(os.path.realpath(__file__)) + "/"
+
+# model path 
+model = main_directory + "mvnmv4_merced"
+# image directory. images/images contains the tif files
+image_directory = main_directory + "images"
+
+sys.path.append(main_directory)
+import gdal_merge as gm
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+print("TF version:", tf.__version__)
+print("GPU is", "available" if tf.test.is_gpu_available() else "NOT AVAILABLE")
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "it is a secret"
-training_file = ""
 
-'''
-app.config.update(
-    CELERY_BROKER_URL='redis://localhost:6379',
-    CELERY_RESULT_BACKEND='redis://localhost:6379'
-)
-celery = make_celery(app)
+app.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL']
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
-'''
+model = load_model(model)
 
 def file_exists():
     path = request.form.get('file_path')
@@ -42,11 +63,66 @@ def file_exists():
     print("File not exists!",file=sys.stderr)
     return False
 
+#function for fixing shapefiles to only create polygons around the the specified class
+def fix_shp(filename):
+    shp = geopandas.read_file(filename)
+    for index, feature in tqdm(shp.iterrows()):
+        if feature["DN"] == 0:
+            shp.drop(index, inplace=True)
+    shp.to_file(filename)
+    return shp
+
+# pass in image path (file), read and save jpg in the static/images directory
+def tif_to_jpg(file):
+	with Image.open(file) as im:
+		new_im = im.convert("RGB")
+		new_file = file.rstrip(".tif")
+		new_im.save(main_directory + "static/images/" + str(new_file)[-1] + ".jpg", "JPEG")
+
+# add str to the begining of every element in list
+def prepend(list, str): 
+    # Using format() 
+    str += '{0}'
+    list = [str.format(i) for i in list] 
+    return(list) 
+
+#Since the original model outputs the values from the last dense layer (no final activation), we need to definte the sigmoid function for predicted class conditional probabilities
+def sigmoid(x):
+    return 1/(1 + np.exp(-x)) 
+
 
 @app.route('/')
 @app.route('/index')
 def index():
     return render_template('index.html',title='Home')
+
+@app.route('/download', methods=['GET'])
+def download():
+
+    # TO DO: Allow user to download the .tif (maybe .shp) files?
+
+    # Delete all the files uploaded + created 
+    os.system('rm -rf ' + main_directory + 'images/*')
+    print('mkdir ' + image_directory + '/images/')
+    # recreate images/images subfolder
+    os.system('mkdir ' + image_directory + '/images/')
+    print('mkdir ' + image_directory + '/images/')
+    
+    # list of files to delete so each user can start with same file structure
+    files_to_del = list(['0.prj', '1.prj', '0.tif', '1.tif', '0.shx', '1.shx', '0.shp', '1.cpg', '1.shp', '1.dbf', '0.dbf', '1.jpg', '0.jpg'])
+    for f in files_to_del:
+        os.system('rm -rf ' + main_directory + f)
+        print('rm -rf ' + main_directory + f)
+
+    # delete the files in static images
+    for f in os.listdir('static/images/'):
+        os.system('rm -rf ' + main_directory + 'static/images/' + f)
+        print('rm -rf ' + main_directory + 'static/images/' + f)
+
+
+    html = render_template('index.html')
+    response = make_response(html)
+    return response
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -58,14 +134,165 @@ def upload():
 
     return render_template('upload.html', title='Sign In')
 
-@app.route('/classify', methods=['POST'])
+
+
+@app.route('/classify', methods=['GET'])
 def classify():
-    global training_file
-    #Retile.test(Retile)
-    Retile.run(Retile, "256", training_file, "output")
+    print(request.args.get('author'))
+
+    #Read images using keras and split into batches
+    image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+    data_gen = image_generator.flow_from_directory(directory=image_directory,
+                                                        batch_size=32,
+                                                        shuffle=False,
+                                                        target_size=(256, 256))
+
+    #Set up dataframe that will hold classifications
+    column_names = ["prediction","p_0","p_1","filename"]
+    result_df = pd.DataFrame(columns=column_names)
+
+    #predict probabilities from model for the batches
+    predictions = model.predict(data_gen)
+
+    print(predictions.shape)
+
+    #associate filenames and classification for each prediction
+    for i,prediction in tqdm(enumerate(predictions)):
+        result_df.loc[i,"filename"] = data_gen.filenames[i]
+
+        #calculating predictions 
+        result_df.loc[i,"p_0"] = sigmoid(prediction[0])
+        result_df.loc[i,"p_1"] = sigmoid(prediction[1])
+        
+        #getting final class prediction
+        result_df.loc[i,"prediction"] = np.argmax(prediction)
+        # print(i, prediction)
+
+
+    # GENERATING PROBABILITY TILES
+    for index, sample in tqdm(result_df.iterrows()):
+        # loading original image
+        original = os.path.abspath(os.path.join(image_directory, sample["filename"]))
+        # print('original: ', original)
+        img = rasterio.open(original) 
+
+        #creating new raster mask with pixel values of conditional probability
+        mask = sample["p_0"] * np.ones(shape=(img.width, img.height))
+
+        #saving file output to new file
+        filename = "prob_" + os.path.basename(sample["filename"])
+        output = os.path.abspath(os.path.join(image_directory, os.path.dirname(sample["filename"]), filename))
+        # print('output: ', output)
+        #creates new file with projection of past image
+        with rasterio.open(output,'w',driver='GTiff',height=img.height,width=img.width,count=1,dtype=mask.dtype,crs='+proj=latlong',transform=img.transform,) as dst:dst.write(mask, 1)
+    print('probability tiles generated')
+    # Moving Files to Folders
+
+    dest_folders = []
+    #Organize tiles into folders
+    for index, row in tqdm(result_df.iterrows()):
+        cur_file = image_directory + "/" + row['filename']
+        cur_file = cur_file.replace("jpg","tif",2)
+        classification = row['prediction'] 
+
+        #set destination folder, and creates the folder if it doesn't exist
+        dest_folder = os.path.join(os.path.abspath(image_directory),str(classification))
+        dest_folders.append(dest_folder)
+        if os.path.exists(dest_folder) == False:
+            os.mkdir(dest_folder)
+        dest = os.path.join(dest_folder,os.path.basename(cur_file))
     
-    print(training_file,file=sys.stderr)
-    return render_template('classify.html',file_path = training_file)
+        #moves file
+        src = cur_file
+        os.rename(src, dest)
+    print('organized into folders')
+
+    # recombine classified tiles for each class
+
+    # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
+    # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif
+    gdal_merge_args = list(['-o', str(main_directory + '1.tif')])
+    # list of non-mangrove tif
+    nm_img_list = list(os.listdir(image_directory + '/1/'))
+    nm_img_path = image_directory + '/1/'
+    nm_img_list = prepend(nm_img_list, nm_img_path)
+
+    files_string = " ".join(nm_img_list)
+    # concat to create complete list of args
+    command = "gdal_merge.py -o " + main_directory + "1.tif " + files_string
+    os.system(command)
+    print('ran !gdal_merge.py -o /content/1.tif /content/images/1/*')
+
+    # TO DO: Put the next 3 blocks into functions
+
+    # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
+    # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
+    gdal_merge_args = []
+    gdal_merge_args = list(['-o', str(main_directory + '0.tif')])
+    # list of non-mangrove tif
+    m_img_list = list(os.listdir(image_directory + '/0/'))
+    m_img_path = image_directory + '/0/'
+    m_img_list = prepend(m_img_list, m_img_path)
+    files_string = " ".join(m_img_list)
+    # concat to create complete list of args
+    command = "gdal_merge.py -o " + main_directory + "0.tif " + files_string
+    os.system(command)
+    print('ran !gdal_merge.py -o /content/0.tif /content/images/0/*')
+
+   
+    #probability tiles remain unmoved, so just get all the leftover tiles
+    # run gdal_merge.py and prepare the argument array:     !gdal_merge.py -o /content/p.tif /content/images/images/*'''
+    # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
+    gdal_merge_args = []
+    gdal_merge_args = list(['-o', str(main_directory + 'p.tif')])
+    # list of prob tif
+    prob_img_list = list(os.listdir(image_directory + '/images/'))
+    prob_img_path = image_directory + '/images/'
+    prob_img_list = prepend(prob_img_list, prob_img_path)
+    files_string = " ".join(prob_img_list)
+    # concat to create complete list of args
+    command = "gdal_merge.py -o " + main_directory + "p.tif " + files_string
+    os.system(command)
+    print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*')
+
+    # TO DO HERE: STORE 1.TIF 0.TIF P.TIF SOMEWHERE
+
+    # create .shp files
+    os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
+    os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
+    print('ran gdal_polygonize')
+
+    # store tif as jpg for visualization
+    tif_to_jpg(main_directory + "1.tif")
+    tif_to_jpg(main_directory + "0.tif")
+
+    '''# create visualizations -- CRASHES
+    # save the plot into 1.png
+    src = rasterio.open("1.tif")
+    shp = fix_shp("1.shp")
+    fig, ax = plt.subplots(figsize=(5, 10))
+    rasterio.plot.show(src, ax=ax)
+    shp.plot(ax=ax, facecolor='green', edgecolor='red', alpha=0.25)
+    plt.savefig('1.png')
+    print('created 1.png')
+
+    # save the plot into 0.png
+    src = rasterio.open("0.tif")
+    shp = fix_shp("0.shp")
+    fig, ax = plt.subplots(figsize=(5, 10))
+    rasterio.plot.show(src, ax=ax)
+    shp.plot(ax=ax, facecolor='green', edgecolor='red', alpha=0.25)
+    plt.savefig('0.png')
+
+    # save the plot into p.png
+    src = rasterio.open("p.tif")
+    rasterio.plot.show(src,cmap='viridis')
+    plt.savefig('p.png')'''
+        
+    html = render_template('index.html')
+    response = make_response(html)
+    return response
+    
 
 
 if __name__ == '__main__':
