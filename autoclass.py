@@ -82,7 +82,7 @@ class Autoclass():
             input_std = 255,
             input_layer = "Placeholder",
             output_layer = "final_result",
-            image_directory,
+            IMAGE_DIRECTORY,
             output_file = "results.csv",
             batch_size = 128
             ):
@@ -123,7 +123,7 @@ class Autoclass():
         if args.graph:
             model_file = args.graph
         if args.images:
-            image_directory = args.images
+            IMAGE_DIRECTORY = args.images
         if args.labels:
             label_file = args.labels
         if args.output_file:
@@ -156,7 +156,7 @@ class Autoclass():
         # Loading tf graph and creating list of files to process
         graph = load_graph(model_file)
         file_list = []
-        for root, dirs, files in os.walk(os.path.abspath(image_directory)):
+        for root, dirs, files in os.walk(os.path.abspath(IMAGE_DIRECTORY)):
             for file in files:
                             file_list.append(os.path.join(root, file))
 
@@ -166,7 +166,7 @@ class Autoclass():
         output_operation = graph.get_operation_by_name(output_name)
 
         # generating batches
-        filenames = [os.path.join(image_directory, file) for file in os.listdir(image_directory)]
+        filenames = [os.path.join(IMAGE_DIRECTORY, file) for file in os.listdir(IMAGE_DIRECTORY)]
         batches, num_batches = generate_batches(filenames, batch_size)
         
         # for tracking execution time
@@ -223,7 +223,7 @@ class Autoclass():
             cur_file = row['file']
             cur_file = cur_file.replace("jpg","tif",2)
             classification = row['max'] 
-            dest_folder = os.path.join(os.path.abspath(image_directory),classification)
+            dest_folder = os.path.join(os.path.abspath(IMAGE_DIRECTORY),classification)
             dest_folders.append(dest_folder)
             if os.path.exists(dest_folder) == False:
                 os.mkdir(dest_folder)
@@ -232,7 +232,7 @@ class Autoclass():
             os.rename(src, dest)
         
         for dest in dest_folders:
-            call = "gdal_merge.py -o " + image_directory + " " + os.path.join(dest, "*")
+            call = "gdal_merge.py -o " + IMAGE_DIRECTORY + " " + os.path.join(dest, "*")
             print(call)
             subprocess.call(call, shell=True)
 

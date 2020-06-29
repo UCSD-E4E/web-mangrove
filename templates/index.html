@@ -29,13 +29,28 @@
         <div class="row">
            <div class="col-sm-6">
               <h3> 1. Upload Files </h3>
-              <p> Directions: Upload the .zip file to classify (future: accepting .tif files later) </p>
+              <p> Directions: Upload the .zip file to classify (future: accepting .tif files later). Click 'unzip' if it is a .zip file. </p>
               
-              <input type="file" id="myFile">
+              <!-- <input type="file" id="myFile"> -->
+              <ul class=flashes>
+               {% for message in messages %}
+                 <li>{{ message }}</li>
+               {% endfor %}
+               </ul>
               <br>
-            <form action="upload" method="get">
+              <form action="{{ url_for('upload')}}" method="POST" enctype=multipart/form-data>
+               <input type=file name=file>
+               <br>
+               <input type=submit value=Upload>
+               </form>
+               <br>
+               <form action="unzip" method="get">
+                  <input type="submit" value="Unzip">
+               </form>
+            <!-- 
+               <form action="upload" method="get">
                <input type="submit" value="Upload File">
-            </form>
+            </form> --> 
               
            </div>
            <div class="col-sm-6">
