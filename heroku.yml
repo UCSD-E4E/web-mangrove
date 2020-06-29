@@ -1,0 +1,9 @@
+setup:
+  config: {}
+build:
+  languages:
+    - >-
+      https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku-community/apt.tgz
+    - python
+run:
+  web: 'gunicorn app:app'
