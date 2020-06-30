@@ -1,0 +1,9 @@
+setup:
+  config: {}
+build:
+  packages:
+    - gdal-bin
+  languages:
+    - python
+run:
+  web: 'gunicorn app:app'
