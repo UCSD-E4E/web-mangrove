@@ -77,19 +77,27 @@
       <div class="container">
          <div class="row">
             <div class="col-sm-12">
-                <h3> 3. Visualize the Classification </h3>                
+                <h3> 3. Visualize the Classification </h3>    
+                <br>
+                <h4> Click download to download the respective .shp and .tif files. </h4>                
             </div>
          </div>
          
          <div class="col-sm-4">
             <img src="/static/images/0.jpg" alt ='' width="100%">
-            <h4> Non-mangrove Classification</h4>             
+            <h4> Non-mangrove Classification</h4>    
+            <form action="download_nm" method="GET" >  
+               <input type="submit" value="Download Non-Mangrove classification">
+            </form>         
          </div>
          
         
          <div class="col-sm-4">
             <img src="/static/images/1.jpg" alt ='' width="100%">
-            <h4> Mangrove Classification</h4>               
+            <h4> Mangrove Classification</h4> 
+            <form action="download_m" method="GET" >  
+               <input type="submit" value="Download Mangrove classification">
+            </form>                  
          </div>
    
          <div class="col-sm-4">

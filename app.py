@@ -162,6 +162,21 @@ def upload():
     response = make_response(html)
     return response
 
+@app.route('/download_m', methods=['GET'])
+def download_m():
+    filename = '1.tif'
+    return redirect(url_for('uploaded_file', filename=filename))
+
+@app.route('/', methods=['GET'])
+def download_nm():
+    filename = '0.tif'
+    return redirect(url_for('uploaded_file', filename=filename))
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(MAIN_DIRECTORY,
+                               filename)
+
 @app.route('/unzip', methods=['GET'])
 def unzip():
 
