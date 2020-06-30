@@ -27,7 +27,7 @@ Fiona==1.8.13.post1
 Flask==1.1.1
 future==0.18.2
 gast==0.3.3
-GDAL==3.1.0
+# GDAL==3.1.0
 geopandas==0.8.0
 gevent==20.6.2
 gevent-websocket==0.10.1
