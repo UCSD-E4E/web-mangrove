@@ -2,17 +2,11 @@ import os
 import sys
 from flask import Flask, render_template, make_response, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
-from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField,validators
-from wtforms.validators import DataRequired
-from retile import Retile
-from celery import Celery
 
 from tqdm.autonotebook import tqdm
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import os
-import matplotlib.pyplot as plt
 import rasterio
 import subprocess
 
@@ -141,6 +135,8 @@ def download():
 @app.route('/upload', methods=['POST'])
 def upload():
 
+    # download() delete all the images from the prev instance of running the website
+
     # check if the post request has the file part
     if 'file' not in request.files:
         flash('No file part')
@@ -181,11 +177,11 @@ def uploaded_file(filename):
 def unzip():
 
     uploaded_file_name = os.listdir('images/images')[0]
-    '''os.system("unzip " + UPLOAD_FOLDER + uploaded_file_name)
+    os.system("unzip " + UPLOAD_FOLDER + uploaded_file_name)
     print("unzip " + UPLOAD_FOLDER + uploaded_file_name)
 
     os.system("rm -rf " + UPLOAD_FOLDER + uploaded_file_name)
-    print("rm -rf " + UPLOAD_FOLDER + uploaded_file_name)'''
+    print("rm -rf " + UPLOAD_FOLDER + uploaded_file_name)
 
     # !mv *.tif /content/images/images/
     os.system("mv " + "*.tif " + UPLOAD_FOLDER)
@@ -272,9 +268,7 @@ def classify():
     # recombine classified tiles for each class
 
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
-    # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif
-    gdal_merge_args = list(['-o', str(MAIN_DIRECTORY + '1.tif')])
-    # list of non-mangrove tif
+    # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
     nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
     nm_img_path = IMAGE_DIRECTORY + '/1/'
     nm_img_list = prepend(nm_img_list, nm_img_path)
