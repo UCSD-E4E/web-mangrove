@@ -34,6 +34,8 @@ try:
     from osgeo import gdal
 except ImportError:
     import gdal
+except ModuleNotFoundError:
+    import gdal
 
 try:
     progress = gdal.TermProgress_nocb
