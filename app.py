@@ -33,7 +33,8 @@ print('MAIN_DIRECTORY from OS: ', os.path.dirname(os.path.realpath(__file__)))
 MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
 
 # model path 
-model = MAIN_DIRECTORY + "mvnmv4_merced"
+MODEL_PATH = MAIN_DIRECTORY + "mvnmv4_merced_bright.zip"
+ 
 # image directory. images/images contains the tif files
 IMAGE_DIRECTORY = MAIN_DIRECTORY + "images"
 
@@ -54,6 +55,10 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# unzip model zip file
+os.system("unzip " + MODEL_PATH)
+model = MAIN_DIRECTORY + "mvnmv4_merced"
 
 model = load_model(model)
 
