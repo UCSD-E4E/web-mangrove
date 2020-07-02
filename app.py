@@ -10,9 +10,6 @@ import numpy as np
 import rasterio
 import subprocess
 
-from descartes import PolygonPatch
-from rasterio.plot import show
-import matplotlib as mpl
 import geopandas
 import fiona
 
