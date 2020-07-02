@@ -1,0 +1,10 @@
+setup:
+  config: {}
+build:
+  packages:
+    - gdal-bin
+  languages:
+    - >-
+      https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku-community/apt.tgz
+run:
+  web: 'gunicorn app:app'
