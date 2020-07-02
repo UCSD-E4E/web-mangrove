@@ -1,0 +1,8 @@
+setup:
+  config:
+    BUILDPACK_URL: 'https://github.com/mojodna/heroku-buildpack-gdal.git'
+build:
+  packages:
+    - gdal-bin
+  languages:
+    - 'https://github.com/mojodna/heroku-buildpack-gdal.git'
