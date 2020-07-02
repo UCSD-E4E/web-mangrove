@@ -6,3 +6,5 @@ build:
     - gdal-bin
   languages:
     - 'https://github.com/mojodna/heroku-buildpack-gdal.git'
+run:
+  web: gunicorn app:app
