@@ -1,10 +1,8 @@
 setup:
-  config:
-    BUILDPACK_URL: 'https://github.com/mojodna/heroku-buildpack-gdal.git'
+  config: {}
 build:
   packages:
     - gdal-bin
-  languages:
-    - 'https://github.com/mojodna/heroku-buildpack-gdal.git'
+
 run:
   web: gunicorn app:app
