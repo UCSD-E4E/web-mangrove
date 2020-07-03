@@ -53,7 +53,7 @@ app.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # unzip model zip file
-os.system("unzip -n" + MODEL_PATH)
+os.system("unzip -n " + MODEL_PATH)
 model = MAIN_DIRECTORY + "mvnmv4_merced"
 
 model = load_model(model)
