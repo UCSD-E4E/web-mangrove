@@ -1,9 +1,0 @@
-setup:
-  config:
-    BUILDPACK_URL: 'https://github.com/heroku/heroku-geo-buildpack.git'
-build:
-  packages:
-    - gdal-bin
-run:
-  web: 'gunicorn app:app'
-
