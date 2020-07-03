@@ -29,7 +29,7 @@ print('MAIN_DIRECTORY from OS: ', os.path.dirname(os.path.realpath(__file__)))
 MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
 
 # model path 
-MODEL_PATH = MAIN_DIRECTORY + "mvnmv4_merced_bright.zip"
+MODEL_PATH = MAIN_DIRECTORY + "mangrove_model.h5"
  
 # image directory. images/images contains the tif files
 IMAGE_DIRECTORY = MAIN_DIRECTORY + "images"
@@ -38,7 +38,6 @@ IMAGE_DIRECTORY = MAIN_DIRECTORY + "images"
 UPLOAD_FOLDER = IMAGE_DIRECTORY + '/images/'
 
 ALLOWED_EXTENSIONS = {'zip', 'tif'}
-
 
 sys.path.append(MAIN_DIRECTORY)
 import gdal_merge as gm
@@ -56,16 +55,17 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.system("unzip -o " + MODEL_PATH)
 model = MAIN_DIRECTORY + "mvnmv4_merced"
 
-model = load_model(model)
+#model = load_model(MAIN_DIRECTORY + 'mvnmv4_merced_model.h5')
+#model.summary()
 
 # old code idk if i need this
-def file_exists():
+'''def file_exists():
     path = request.form.get('file_path')
     if os.path.isfile(path):
         print("File exists!",file=sys.stderr)
         return True
     print("File not exists!",file=sys.stderr)
-    return False
+    return False'''
 
 # check for allowed file extension
 def allowed_file(filename):

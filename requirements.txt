@@ -8,6 +8,6 @@ pandas==1.0.3
 Pillow==7.1.2
 # pygdal==2.4.0.4
 rasterio==1.1.5
-tensorflow==2.2.0
+tensorflow-cpu==2.2.0
 tqdm==4.46.1
 Werkzeug==1.0.0
