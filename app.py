@@ -1,6 +1,6 @@
 import os
 import sys
-from flask import Flask, render_template, make_response, flash, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, make_response, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
 from tqdm.autonotebook import tqdm
@@ -11,7 +11,6 @@ import rasterio
 import subprocess
 
 import geopandas
-import fiona
 
 from PIL import Image
 import PIL
@@ -141,7 +140,6 @@ def upload():
 
     # check if the post request has the file part
     if 'file' not in request.files:
-        flash('No file part')
         print('No file part')
         return redirect(request.url)
     file = request.files['file']
