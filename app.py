@@ -104,9 +104,29 @@ def sigmoid(x):
 
 
 @app.route('/')
+def home():
+    return render_template('login .html')
 @app.route('/index')
 def index():
-    return render_template('index.html',title='Home')
+    return render_template('index.html')
+
+# post so user can send login credentials to the login endpoint
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    # Handle post request
+    if request.method == 'POST':
+        # test input values to see if they're correct 
+        if (request.form['username'] != 'sioadmin') or (request.form['password'] != 'sioadmin'):
+            error = 'Invalid credentials. Please try again.'
+        # if info is correct, redirect to main page
+        else:
+            # maybe this should be redirect but not too sure: return redirect(url_for('index'))  
+            html = render_template('index.html')
+            response = make_response(html)
+            return response
+
+    return render_template('login.html', error=error)
 
 @app.route('/download', methods=['GET'])
 def download():
@@ -352,6 +372,12 @@ def classify():
     response = make_response(html)
     return response
     
+@app.before_request
+def require_login():
+
+    allowed_routes = ['login']
+    if request.endpoint not in allowed_routes:
+        return redirect('/login')
 
 
 if __name__ == '__main__':
