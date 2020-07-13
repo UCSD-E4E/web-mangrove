@@ -662,14 +662,14 @@ layout = dict(title="Visualization of Mangrove CNN",
 
 dict_of_fig = dict(data=[data], layout=layout)
 app.layout = html.Div(children=[
-    dcc.RadioItems(id='radiobtn', 
+    dcc.Checklist(id='radiobtn', 
     options=[
         {'label': 'Mangrove', 'value': 'mangrove'},
         {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
-        {'label': 'Everything', 'value': 'everything'},
+        # {'label': 'Everything', 'value': 'everything'},
         {'label': 'Probability', 'value': 'prob'}
     ],
-    value='everything',
+    value=['mangrove', 'non-mangrove'],
     labelStyle={'display': 'inline-block', 'textAlign': 'center'}
 )  , 
     dcc.Graph(id='viz', figure=dict_of_fig)
@@ -709,11 +709,18 @@ def get_fig(version):
                     coordinates =  [
                             [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
                                     ])]
-    if (version == 'mangrove'):
-        layers=(border+mangrove)
-    elif (version == 'non-mangrove'):
-        layers=(border+non_mangrove)
-    else:
+    print('version:', version)
+    if len(version) == 0:
+        layers=(border)
+    if len(version) == 1:
+        if (version[0] == 'mangrove'):
+            layers=(border+mangrove)
+        # gotta add probability
+        # elif (version[0] == 'non-mangrove'):
+        else:
+            layers=(border+non_mangrove)
+    # everything
+    if len(version)==2:
         layers=(border+mangrove+non_mangrove)
     # version =='prob'
 
