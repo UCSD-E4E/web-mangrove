@@ -10,6 +10,18 @@ import numpy as np
 import rasterio
 import subprocess
 
+import visualize
+import base64
+
+from descartes import PolygonPatch
+from rasterio.plot import show
+import matplotlib as mpl
+import geopandas
+import fiona
+
+import rasterio.features
+from geojson import Point, Feature, FeatureCollection, dump
+
 import geopandas
 
 from PIL import Image
@@ -18,12 +30,20 @@ PIL.Image.MAX_IMAGE_PIXELS = None
 
 from tensorflow.keras.models import load_model
 
+# dash 
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+
+
 #Set model location
 output_file = "results.csv"
 #store the model
 
 # TO DO: ADD OS FUNCTIONS TO MAKE IT RUN ON ANYONE'S COMPUTER
 print('MAIN_DIRECTORY from OS: ', os.path.dirname(os.path.realpath(__file__)))
+
+MAPBOX_APIKEY = "pk.eyJ1Ijoibm1laXN0ZXIiLCJhIjoiY2tjODZya3VnMHU0cjJ2bGpxanh0eW9idiJ9._DNCB5IcbFoGl7AIm0vVlA"
 
 # overall directory where all files and folders are stored 
 MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -47,10 +67,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print("TF version:", tf.__version__)
 print("GPU is", "available" if tf.test.is_gpu_available() else "NOT AVAILABLE")
-app = Flask(__name__)
+server = Flask(__name__)
 
-app.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
+server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # unzip model zip file
 os.system("unzip -n " + MODEL_PATH)
@@ -103,15 +123,15 @@ def sigmoid(x):
     return 1/(1 + np.exp(-x)) 
 
 
-@app.route('/')
+@server.route('/')
 def home():
-    return render_template('login .html')
-@app.route('/index')
+    return render_template('index.html')
+@server.route('/index')
 def index():
     return render_template('index.html')
 
 # post so user can send login credentials to the login endpoint
-@app.route('/login', methods=['GET', 'POST'])
+@server.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     # Handle post request
@@ -121,14 +141,14 @@ def login():
             error = 'Invalid credentials. Please try again.'
         # if info is correct, redirect to main page
         else:
-            # maybe this should be redirect but not too sure: return redirect(url_for('index'))  
+            # maybe later change this so that it goes to "/" and /login isn't in the url, lowkey dont really know how to do that
             html = render_template('index.html')
             response = make_response(html)
             return response
 
     return render_template('login.html', error=error)
 
-@app.route('/download', methods=['GET'])
+@server.route('/download', methods=['GET'])
 def download():
 
     # TO DO: Allow user to download the .tif (maybe .shp) files?
@@ -156,9 +176,10 @@ def download():
     response = make_response(html)
     return response
 
-@app.route('/upload', methods=['POST'])
+@server.route('/upload', methods=['POST'])
 def upload():
 
+    print('in upload')
     # download() delete all the images from the prev instance of running the website
 
     # check if the post request has the file part
@@ -175,28 +196,151 @@ def upload():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         print('filename:', filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
 
     html = render_template('index.html')
     response = make_response(html)
     return response
 
-@app.route('/download_m', methods=['GET'])
+# create geojson file to store the polygon
+def create_geojson(FILENAME, final_filename):
+    # list of GeoJSON feature objects (later this becomes a FeatureCollection)
+    features = []
+
+    print('File that is being opened: ', FILENAME)
+    dataset = rasterio.open(os.path.abspath(FILENAME))
+
+    # Read the dataset's valid data mask as a ndarray.
+    mask = dataset.dataset_mask()
+
+    # Extract feature shapes and values from the array.
+    for geom, val in rasterio.features.shapes(mask, transform=dataset.transform):
+    # val is the value of the raster feature corresponding to the shape
+    # val = 0: no shape and val = 255 means shape (drone footage, aka tiles we want)
+        if (val == 255.0):  
+
+            # Transform shapes from the dataset's own coordinate reference system to CRS84 (EPSG:4326) tbh idk what this means
+            geom = rasterio.warp.transform_geom(dataset.crs, 'EPSG:4326', geom, precision=30)
+
+            # store GeoJSON shapes to features list.
+            # might have to put the probabilty value in properties ... tbd
+            features.append(Feature(geometry=geom, properties={'name': FILENAME}))
+
+    # all features become a feature collection
+    feature_collection = FeatureCollection(features)
+
+    '''# Feature collection goes into a geojson file
+    with open(final_filename, 'w') as f:
+        dump(feature_collection, f)'''
+    
+    return feature_collection
+
+
+@server.route('/visualization', methods=['GET'])
+def visualization():
+
+    '''# open the tif image and create geojson file
+    FILENAME = '0.tif'
+    final_filename = 'mngrv.geojson'
+    mngrv_geojson = create_geojson(FILENAME, final_filename)
+
+    # open the tif image and create geojson file
+    FILENAME = '1.tif'
+    final_filename = 'n-mngrv.geojson'
+    n_mngrv_geojson = create_geojson(FILENAME, final_filename)
+
+    mngrv_tiles = len(mngrv_geojson['features'])
+    n_mngrv_tiles = len(n_mngrv_geojson['features'])
+
+    sources = visualize.make_sources(mngrv_geojson) # dictionary to create the borders
+    lons, lats = visualize.get_centers(mngrv_geojson) # lat lon of all the centers of the scatter plot (to mimic hover text effect)
+    latmin_m, latmax_m, lonmin_m, lonmax_m = visualize.get_latlonminmax(mngrv_geojson)
+    latmin_nm, latmax_nm, lonmin_nm, lonmax_nm = visualize.get_latlonminmax(n_mngrv_geojson)
+
+    # use a scatter map box to create the hover text
+    data = dict(type='scattermapbox',
+                lat=lats,
+                lon=lons,
+                mode='markers',
+                text='mangrove',
+                showlegend=False,
+                hoverinfo='text'
+                )
+    
+    green_hue = (180-78)/360.0
+    red_hue = (180-180)/360.0
+
+    ds_factor = 8
+
+    FILENAME = '0.tif'
+    image_m_green = visualize.get_im(FILENAME, ds_factor, green_hue)
+
+    FILENAME = '1.tif'
+    image_nm_red = visualize.get_im(FILENAME, ds_factor, red_hue)
+
+    layers=([dict(sourcetype = 'geojson',
+              source =sources[k],
+              below="",
+              type = 'line',    # the borders
+              line = dict(width = 2),
+              color = 'black',
+              ) for k in range(n_tiles)
+          ] +
+        [dict(below ='',
+                      opacity=0.9,
+                  source = image_m_green,
+                  sourcetype= "image",
+                  coordinates =  [
+                          [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                 ])] + 
+           [dict(below ='',
+                      opacity=0.9,
+                  source = image_nm_red,
+                  sourcetype= "image",
+                  coordinates =  [
+                          [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
+                                 ])]
+                     )
+
+    avg_lon = np.average(lons)
+    avg_lat = np.average(lats)
+
+    layout = dict(title="Visualization of Mangrove CNN",
+                autosize=False,
+                width=700,
+                height=800,
+                hovermode='closest',
+                hoverdistance = 30,
+                mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                            layers=layers,
+                            bearing=0,
+                            center=dict(
+                                        lat=avg_lat,  # the center of this regions
+                                        lon=avg_lon),
+                            pitch=0,
+                            zoom=16,
+                            style = 'mapbox://styles/mapbox/outdoors-v11'
+                            )
+                )
+    '''
+    return redirect(url_for('/visualization/_dash-update-component'))
+
+@server.route('/download_m', methods=['GET'])
 def download_m():
     filename = '1.tif'
     return redirect(url_for('uploaded_file', filename=filename))
 
-@app.route('/', methods=['GET'])
+@server.route('/', methods=['GET'])
 def download_nm():
     filename = '0.tif'
     return redirect(url_for('uploaded_file', filename=filename))
 
-@app.route('/uploads/<filename>')
+@server.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(MAIN_DIRECTORY,
                                filename)
 
-@app.route('/unzip', methods=['GET'])
+@server.route('/unzip', methods=['GET'])
 def unzip():
 
     uploaded_file_name = os.listdir('images/images')[0]
@@ -217,7 +361,7 @@ def unzip():
 
 
 
-@app.route('/classify', methods=['GET'])
+@server.route('/classify', methods=['GET'])
 def classify():
     print(request.args.get('author'))
 
@@ -372,15 +516,241 @@ def classify():
     response = make_response(html)
     return response
     
-@app.before_request
+'''@app.before_request
 def require_login():
 
     allowed_routes = ['login']
     if request.endpoint not in allowed_routes:
         return redirect('/login')
+'''
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
+
+# open the tif image and create geojson file
+FILENAME = '0.tif'
+final_filename = 'mngrv.geojson'
+mngrv_geojson = create_geojson(FILENAME, final_filename)
+
+# open the tif image and create geojson file
+FILENAME = '1.tif'
+final_filename = 'n-mngrv.geojson'
+n_mngrv_geojson = create_geojson(FILENAME, final_filename)
+
+mngrv_tiles = len(mngrv_geojson['features'])
+n_mngrv_tiles = len(n_mngrv_geojson['features'])
+
+sources = visualize.make_sources(mngrv_geojson) # dictionary to create the borders
+print('got sources')
+lons, lats = visualize.get_centers(mngrv_geojson) # lat lon of all the centers of the scatter plot (to mimic hover text effect)
+print('got lats lons')
+latmin_m, latmax_m, lonmin_m, lonmax_m = visualize.get_latlonminmax(mngrv_geojson)
+print('got min max lats lons')
+latmin_nm, latmax_nm, lonmin_nm, lonmax_nm = visualize.get_latlonminmax(n_mngrv_geojson)
+
+# use a scatter map box to create the hover text
+data = dict(type='scattermapbox',
+            lat=lats,
+            lon=lons,
+            mode='markers',
+            opacity = 0,
+            text='mangrove',
+            showlegend=False,
+            hoverinfo='text'
+            )
+
+layers=([dict(sourcetype = 'geojson',
+            source =sources[k],
+            below="",
+            type = 'line',    # the borders
+            line = dict(width = 2),
+            color = 'black',
+            ) for k in range(mngrv_tiles)
+        ])
+
+green_hue = (180-78)/360.0
+red_hue = (180-180)/360.0
+
+ds_factor = 8
+
+FILENAME = '0.tif'
+image_m_green = visualize.get_im(FILENAME, ds_factor, green_hue)
+image_m_green.save("image_m_green.png","PNG")
+print("green m image saved")
+
+FILENAME = '1.tif'
+image_nm_red = visualize.get_im(FILENAME, ds_factor, red_hue)
+image_nm_red.save("image_nm_red.png","PNG")
+print("red nm image saved")
+
+image_filename = "image_m_green.png"
+image_m_green = base64.b64encode(open(image_filename, 'rb').read())
+
+image_filename = "image_nm_red.png"
+image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
+
+avg_lon = np.average(lons)
+avg_lat = np.average(lats)
+
+
+'''layers = ([dict(below ='',
+                    opacity=0.9,
+                source = 'data:image/png;base64,{}'.format(image_m_green.decode()), # 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
+                sourcetype= "image",
+                coordinates =  [
+                        [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                ])])'''
+'''layers=([dict(sourcetype = 'geojson',
+            source =sources[k],
+            below="",
+            type = 'line',    # the borders
+            line = dict(width = 2),
+            color = 'black',
+            ) for k in range(mngrv_tiles)
+        ]  +
+    [dict(below ='',
+                    opacity=0.9,
+                source = "image_m_green.png", # 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
+                sourcetype= "image",
+                coordinates =  [
+                        [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                ])])'''
+
+layers=([dict(sourcetype = 'geojson',
+            source =sources[k],
+            below="",
+            type = 'line',    # the borders
+            line = dict(width = 2),
+            color = 'black',
+            ) for k in range(mngrv_tiles)
+        ]  +
+    [dict(below ='',
+                    opacity=1,
+                source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
+                sourcetype= "image",
+                coordinates =  [
+                        [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                ])] + 
+        [dict(below ='',
+                    opacity=1,
+                source = 'data:image/png;base64,{}'.format(image_nm_red.decode()),
+                sourcetype= "image",
+                coordinates =  [
+                        [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
+                                ])]
+                    )
+
+
+layout = dict(title="Visualization of Mangrove CNN",
+            autosize=False,
+            width=1400,
+            height=800,
+            hovermode='closest',
+            hoverdistance = 30,
+            mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                        layers=layers,
+                        bearing=0,
+                        center=dict(
+                                    lat=avg_lat,  # the center of this regions
+                                    lon=avg_lon),
+                        pitch=0,
+                        zoom=16,
+                        style = 'mapbox://styles/mapbox/satellite-v8'
+
+                        )
+            )
+
+dict_of_fig = dict(data=[data], layout=layout)
+app.layout = html.Div(children=[
+    dcc.RadioItems(id='radiobtn', 
+    options=[
+        {'label': 'Mangrove', 'value': 'mangrove'},
+        {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
+        {'label': 'Everything', 'value': 'everything'},
+        {'label': 'Probability', 'value': 'prob'}
+    ],
+    value='everything',
+    labelStyle={'display': 'inline-block', 'textAlign': 'center'}
+)  , 
+    dcc.Graph(id='viz', figure=dict_of_fig)
+    ])
+
+def get_fig(version):
+    # use a scatter map box to create the hover text
+    data = dict(type='scattermapbox',
+                lat=lats,
+                lon=lons,
+                opacity = 0,
+                mode='markers',
+                text='mangrove',
+                showlegend=False,
+                hoverinfo='text'
+                )
+
+    border = [dict(sourcetype = 'geojson',
+                source =sources[k],
+                below="",
+                type = 'line',    # the borders
+                line = dict(width = 2),
+                color = 'black',
+                ) for k in range(mngrv_tiles)
+            ]
+    mangrove = [dict(below ='',
+                        opacity=1,
+                    source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
+                    sourcetype= "image",
+                    coordinates =  [
+                            [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                    ])]
+    non_mangrove = [dict(below ='',
+                        opacity=1,
+                    source = 'data:image/png;base64,{}'.format(image_nm_red.decode()),
+                    sourcetype= "image",
+                    coordinates =  [
+                            [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
+                                    ])]
+    if (version == 'mangrove'):
+        layers=(border+mangrove)
+    elif (version == 'non-mangrove'):
+        layers=(border+non_mangrove)
+    else:
+        layers=(border+mangrove+non_mangrove)
+    # version =='prob'
+
+    layout = dict(title="Visualization of Mangrove CNN",
+                autosize=False,
+                width=1400,
+                height=800,
+                hovermode='closest',
+                hoverdistance = 30,
+                mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                            layers=layers,
+                            bearing=0,
+                            center=dict(
+                                        lat=avg_lat,  # the center of this regions
+                                        lon=avg_lon),
+                            pitch=0,
+                            zoom=16,
+                            style = 'mapbox://styles/mapbox/satellite-v8'
+
+                            )
+                )
+
+    dict_of_fig = dict(data=[data], layout=layout)
+    return dict_of_fig
+
+
+@app.callback(
+    dash.dependencies.Output('viz', 'figure'),
+    [dash.dependencies.Input('radiobtn', 'value')])
+def update_figure(version):
+    print(version)
+    dict_of_fig = get_fig(version)
+    return dict_of_fig
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run_server(debug=True)
+    server.run(debug=True)
 
 
