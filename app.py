@@ -1,4 +1,7 @@
+from azure.storage.blob import BlockBlobService, PublicAccess
+
 import os
+from os import path
 import sys
 import flash
 from flask import Flask, render_template, make_response, request, redirect, url_for, send_from_directory
@@ -86,6 +89,12 @@ model = MAIN_DIRECTORY + "mvnmv4_merced"
 
 model = load_model(model)
 
+account = 'mangroveclassifier'   # Azure account name
+key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
+container = 'quickstartblobs' # Container name
+
+blob_service = BlockBlobService(account_name=account, account_key=key)
+
 #model = keras.models.load_model(MAIN_DIRECTORY + 'mvnmv4_merced_model.h5')
 #model.summary()
 
@@ -113,9 +122,59 @@ def fix_shp(filename):
     return shp
 
 
-@server.route('/')
+@server.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('index.html')
+    if request.method == 'POST':
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+
+
+        fileextension = filename.rsplit('.',1)[1]
+        Randomfilename = id_generator()
+        filename = Randomfilename + '.' + fileextension
+        try:
+            # Create the BlockBlockService that is used to call the Blob service for the storage account
+            block_blob_service = BlockBlobService(account_name='mangroveclassifier', account_key='s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==')
+
+            # Create a container called 'quickstartblobs'.
+            container_name ='quickstartblobs'
+            block_blob_service.create_container(container_name)
+
+            # Set the permission so the blobs are public.
+            block_blob_service.set_container_acl(container_name, public_access=PublicAccess.Container)
+
+            # Upload the created file, use local_file_name for the blob name
+            block_blob_service.create_blob_from_stream(container_name, filename, file)
+
+            # List the blobs in the container
+            print("\nList blobs in the container")
+            generator = block_blob_service.list_blobs(container_name)
+            for blob in generator:
+                print("\t Blob name: " + blob.name)
+
+            # Clean up resources. This includes the container and the temp files
+            # block_blob_service.delete_container(container_name)
+        except Exception as e:
+            print(e)
+
+        ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
+        return '''
+        <!doctype html>
+        <title>File Link</title>
+        <h1>Uploaded File Link</h1>
+        <p>''' + ref + '''</p>
+        <img src="'''+ ref +'''">
+        '''
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file>
+        <input type=submit value=Upload>
+    </form>
+    '''
+    # return render_template('index.html')
 @server.route('/index')
 def index():
     return render_template('index.html')
@@ -236,7 +295,7 @@ def unzip():
 @server.route('/classify', methods=['GET'])
 def classify():
     
-    classify_mod.classify(IMAGE_DIRECTORY, MAIN_DIRECTORY)
+    classify_mod.classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY)
         
     html = render_template('index.html')
     response = make_response(html)
@@ -253,9 +312,13 @@ def require_login():
 def get_fig(version, mngrv_geojson, n_mngrv_geojson):
 
     image_filename = "image_m_green.png"
+    if not path.exists(image_filename):
+        image_filename = "image_m_green.png"
     image_m_green = base64.b64encode(open(image_filename, 'rb').read())
 
     image_filename = "image_nm_red.png"
+    if not path.exists(image_filename):
+        image_filename = "image_nm_red.png"
     image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
 
     mngrv_tiles = len(mngrv_geojson['features'])
@@ -345,55 +408,82 @@ def start_dash():
     # open the tif image and create geojson file
     FILENAME = '0.tif'
     final_filename = 'mngrv.geojson'
-    mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+    if path.exists(final_filename):
+        import json
+        with open(final_filename) as f:
+            mngrv_geojson = json.load(f)
+    else:
+        mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
 
     # open the tif image and create geojson file
     FILENAME = '1.tif'
     final_filename = 'n-mngrv.geojson'
-    n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+    if path.exists(final_filename):
+        import json
+        with open(final_filename) as f:
+            n_mngrv_geojson = json.load(f)
+    else:
+        n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
 
     FILENAME = '0.tif'
-    image_m_green = visualize.get_im(FILENAME, ds_factor, green_hue)
-    image_m_green.save("image_m_green.png","PNG")
-    print("green m image saved")
+    saved_img = "image_m_green.png"
+    if not path.exists(saved_img):
+        image_m_green = visualize.get_im(FILENAME, ds_factor, green_hue)
+        image_m_green.save("image_m_green.png","PNG")
+        print("green m image saved")
 
     FILENAME = '1.tif'
-    image_nm_red = visualize.get_im(FILENAME, ds_factor, red_hue)
-    image_nm_red.save("image_nm_red.png","PNG")
-    print("red nm image saved")
+    saved_img = "image_nm_red.png"
+    if not path.exists(saved_img):
+        image_nm_red = visualize.get_im(FILENAME, ds_factor, red_hue)
+        image_nm_red.save("image_nm_red.png","PNG")
+        print("red nm image saved")
 
     version = ['mangrove', 'non-mangrove']
-    dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
+    if mngrv_geojson != None and n_mngrv_geojson != None:
+        dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
 
-    app.layout = html.Div(children=[
-        dcc.Checklist(id='radiobtn', 
-        options=[
-            {'label': 'Mangrove', 'value': 'mangrove'},
-            {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
-            # {'label': 'Everything', 'value': 'everything'},
-            {'label': 'Probability', 'value': 'prob'}
-        ],
-        value=['mangrove', 'non-mangrove'],
-        labelStyle={'display': 'inline-block', 'textAlign': 'center'}
-    )  , 
-        dcc.Graph(id='viz', figure=dict_of_fig)
-        ])
+        app.layout = html.Div(children=[
+            dcc.Checklist(id='radiobtn', 
+            options=[
+                {'label': 'Mangrove', 'value': 'mangrove'},
+                {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
+                # {'label': 'Everything', 'value': 'everything'},
+                {'label': 'Probability', 'value': 'prob'}
+            ],
+            value=['mangrove', 'non-mangrove'],
+            labelStyle={'display': 'inline-block', 'textAlign': 'center'}
+        )  , 
+            dcc.Graph(id='viz', figure=dict_of_fig)
+            ])
     return
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
 
+global mngrv_geojson
+global n_mngrv_geojson
+
 # open the tif image and create geojson file
 FILENAME = '0.tif'
 final_filename = 'mngrv.geojson'
-global mngrv_geojson
-mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+if path.exists(final_filename):
+    import json
+    with open(final_filename) as f:
+        mngrv_geojson = json.load(f)
+else:
+    mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
 
 # open the tif image and create geojson file
 FILENAME = '1.tif'
 final_filename = 'n-mngrv.geojson'
-global n_mngrv_geojson
-n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+if path.exists(final_filename):
+    import json
+    with open(final_filename) as f:
+        n_mngrv_geojson = json.load(f)
+else:
+    n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+
 start_dash()
 
 @app.callback(dash.dependencies.Output('viz', 'figure'),

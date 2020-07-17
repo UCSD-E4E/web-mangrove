@@ -29,7 +29,7 @@ def tif_to_jpg(file):
 		new_file = file.rstrip(".tif")
 		new_im.save(MAIN_DIRECTORY + "static/images/" + str(new_file)[-1] + ".jpg", "JPEG")
 
-def classify(IMAGE_DIRECTORY, MAIN_DIRECTORY):
+def classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY):
 
     #Read images using keras and split into batches
     image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)

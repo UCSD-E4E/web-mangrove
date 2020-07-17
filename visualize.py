@@ -143,35 +143,39 @@ def get_im(FILENAME, ds_factor, hue):
     image_hue = Image.fromarray(shift_hue(arr, hue), 'RGBA')
     return image_hue
 
+
 # create geojson file to store the polygon
 def create_geojson(FILENAME, final_filename):
     # list of GeoJSON feature objects (later this becomes a FeatureCollection)
     features = []
 
-    print('File that is being opened: ', FILENAME)
-    dataset = rasterio.open(os.path.abspath(FILENAME))
+    if os.path.isfile(FILENAME):
+        print('File that is being opened: ', FILENAME)
+        dataset = rasterio.open(os.path.abspath(FILENAME))
 
-    # Read the dataset's valid data mask as a ndarray.
-    mask = dataset.dataset_mask()
+        # Read the dataset's valid data mask as a ndarray.
+        mask = dataset.dataset_mask()
 
-    # Extract feature shapes and values from the array.
-    for geom, val in rasterio.features.shapes(mask, transform=dataset.transform):
-    # val is the value of the raster feature corresponding to the shape
-    # val = 0: no shape and val = 255 means shape (drone footage, aka tiles we want)
-        if (val == 255.0):  
+        # Extract feature shapes and values from the array.
+        for geom, val in rasterio.features.shapes(mask, transform=dataset.transform):
+        # val is the value of the raster feature corresponding to the shape
+        # val = 0: no shape and val = 255 means shape (drone footage, aka tiles we want)
+            if (val == 255.0):  
 
-            # Transform shapes from the dataset's own coordinate reference system to CRS84 (EPSG:4326) tbh idk what this means
-            geom = rasterio.warp.transform_geom(dataset.crs, 'EPSG:4326', geom, precision=30)
+                # Transform shapes from the dataset's own coordinate reference system to CRS84 (EPSG:4326) tbh idk what this means
+                geom = rasterio.warp.transform_geom(dataset.crs, 'EPSG:4326', geom, precision=30)
 
-            # store GeoJSON shapes to features list.
-            # might have to put the probabilty value in properties ... tbd
-            features.append(Feature(geometry=geom, properties={'name': FILENAME}))
+                # store GeoJSON shapes to features list.
+                # might have to put the probabilty value in properties ... tbd
+                features.append(Feature(geometry=geom, properties={'name': FILENAME}))
 
-    # all features become a feature collection
-    feature_collection = FeatureCollection(features)
+        # all features become a feature collection
+        feature_collection = FeatureCollection(features)
 
-    '''# Feature collection goes into a geojson file
-    with open(final_filename, 'w') as f:
-        dump(feature_collection, f)'''
-    
-    return feature_collection
+        # Feature collection goes into a geojson file
+        with open(final_filename, 'w') as f:
+            dump(feature_collection, f)
+        
+        return feature_collection
+    else:
+        return None
