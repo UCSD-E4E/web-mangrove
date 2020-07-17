@@ -1,4 +1,6 @@
 from azure.storage.blob import BlockBlobService, PublicAccess
+import string, random, requests
+
 
 import os
 from os import path
