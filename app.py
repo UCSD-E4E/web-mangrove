@@ -17,7 +17,6 @@ import visualize
 import classify_mod
 import base64
 
-from descartes import PolygonPatch
 from rasterio.plot import show
 import matplotlib as mpl
 import geopandas
