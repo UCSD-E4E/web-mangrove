@@ -127,8 +127,8 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
 
 
 @server.route('/', methods=['GET', 'POST'])
-'''def home():
-    if request.method == 'POST':
+def home():
+    '''if request.method == 'POST':
         file = request.files['file']
         filename = secure_filename(file.filename)
 
@@ -159,8 +159,7 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
             # Clean up resources. This includes the container and the temp files
             # block_blob_service.delete_container(container_name)
         except Exception as e:
-            print(e)
-'''
+            print(e)  '''
         #ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
         #return '''
         #<!doctype html>
