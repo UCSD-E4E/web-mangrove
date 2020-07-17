@@ -127,7 +127,7 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
 
 
 @server.route('/', methods=['GET', 'POST'])
-def home():
+'''def home():
     if request.method == 'POST':
         file = request.files['file']
         filename = secure_filename(file.filename)
@@ -160,16 +160,17 @@ def home():
             # block_blob_service.delete_container(container_name)
         except Exception as e:
             print(e)
-
-        ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
-        return '''
-        <!doctype html>
-        <title>File Link</title>
-        <h1>Uploaded File Link</h1>
-        <p>''' + ref + '''</p>
-        <img src="'''+ ref +'''">
-        '''
-    return '''
+'''
+        #ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
+        #return '''
+        #<!doctype html>
+        #<title>File Link</title>
+        #<h1>Uploaded File Link</h1>
+        #<p>''' + ref + '''</p>
+        #<img src="'''+ ref +'''">
+        #'''
+    #return 
+    '''
     <!doctype html>
     <title>Upload new File</title>
     <h1>Upload new File</h1>
@@ -178,7 +179,7 @@ def home():
         <input type=submit value=Upload>
     </form>
     '''
-    # return render_template('index.html')
+    return render_template('index.html')
 @server.route('/index')
 def index():
     return render_template('index.html')
