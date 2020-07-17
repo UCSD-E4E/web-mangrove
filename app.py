@@ -3,7 +3,6 @@ from azure.storage.blob import BlockBlobService, PublicAccess
 import os
 from os import path
 import sys
-import flash
 from flask import Flask, render_template, make_response, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
