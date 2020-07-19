@@ -23,7 +23,17 @@
       </div>
       
       <br>
+      <!-- {% if summary %}
+         <p class=summary><strong>Model Summary:</strong> {{ summary }}
+      {% endif %}-->
+      
       <br>
+
+      <ul class=flashes>
+         {% for message in messages %}
+           <li>{{ message }}</li>
+         {% endfor %}
+      </ul>
 
       <div class="container">
         <div class="row">

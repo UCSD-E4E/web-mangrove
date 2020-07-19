@@ -1,6 +1,6 @@
 from azure.storage.blob import BlockBlobService, PublicAccess
 import string, random, requests
-
+import flash
 
 import os
 from os import path
@@ -84,19 +84,15 @@ server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # unzip model zip file
-# os.system("unzip -n " + MODEL_PATH)
+os.system("unzip -n " + MODEL_PATH)
 model = MAIN_DIRECTORY + "mvnmv4_merced"
 
-# model = load_model(model)
+model = load_model(model)
 
 account = 'mangroveclassifier'   # Azure account name
 key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
-container = 'quickstartblobs' # Container name
+container_name = 'mvnmv4-merced' # Container name
 
-blob_service = BlockBlobService(account_name=account, account_key=key)
-
-#model = keras.models.load_model(MAIN_DIRECTORY + 'mvnmv4_merced_model.h5')
-#model.summary()
 
 # old code idk if i need this
 '''def file_exists():
@@ -178,7 +174,7 @@ def home():
         <input type=submit value=Upload>
     </form>
     '''
-    return render_template('index.html')
+    return render_template('index.html', summary=str(type(model)))
 @server.route('/index')
 def index():
     return render_template('index.html')
