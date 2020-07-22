@@ -171,7 +171,8 @@ def home():
         <input type=submit value=Upload>
     </form>
     '''
-    return render_template('index.html', summary=str(type(model)))
+    return render_template('index.html')
+    # return render_template('index.html', summary=str(type(model)))
 @server.route('/index')
 def index():
     return render_template('index.html')

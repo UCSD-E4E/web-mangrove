@@ -7,6 +7,7 @@ account_key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuX
 
 class DirectoryClient:
   def __init__(self, connection_string, container_name):
+    self.container_name = container_name
     # service_client = BlobServiceClient.from_connection_string(connection_string)
     # self.client = service_client.get_container_client(container_name)
     self.bbs = BlockBlobService(account_name=account_name, account_key=account_key)
@@ -93,8 +94,10 @@ class DirectoryClient:
     '''
     if not path == '' and not path.endswith('/'):
       path += '/'
-
-    blob_iter = self.client.list_blobs(name_starts_with=path)
+    
+    blob_iter = self.client.list_blobs(self.container_name)
+  
+    list_blobs(name_starts_with=path)
     files = []
     for blob in blob_iter:
       relative_path = os.path.relpath(blob.name, path)
