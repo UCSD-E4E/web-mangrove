@@ -1,4 +1,5 @@
-from azure.storage.blob import BlockBlobService, PublicAccess
+# from azure.storage.blob import PublicAccess , BlobServiceClient
+import azure_blob
 import string, random, requests
 import flash
 
@@ -60,7 +61,6 @@ MAPBOX_APIKEY = "pk.eyJ1Ijoibm1laXN0ZXIiLCJhIjoiY2tjODZya3VnMHU0cjJ2bGpxanh0eW9i
 MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
 
 # model path 
-# MODEL_PATH = MAIN_DIRECTORY + "mangrove_model.h5"
 MODEL_PATH = MAIN_DIRECTORY + "mvnmv4_merced_bright.zip"
  
 # image directory. images/images contains the tif files
@@ -84,24 +84,21 @@ server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # unzip model zip file
-os.system("unzip -n " + MODEL_PATH)
-model = MAIN_DIRECTORY + "mvnmv4_merced"
-
-model = load_model(model)
+# os.system("unzip -n " + MODEL_PATH)
 
 account = 'mangroveclassifier'   # Azure account name
 key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
-container_name = 'mvnmv4-merced' # Container name
+CONTAINER_NAME = 'mvnmv4-merced' # Container name
+CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
 
 
-# old code idk if i need this
-'''def file_exists():
-    path = request.form.get('file_path')
-    if os.path.isfile(path):
-        print("File exists!",file=sys.stderr)
-        return True
-    print("File not exists!",file=sys.stderr)
-    return False'''
+# client = azure_blob.DirectoryClient(CONNECTION_STRING, CONTAINER_NAME)
+'''
+# move all this to classify_mod in the end
+client.download('mvnmv4-merced/', './mvnmv4_merced')'''
+
+# model = MAIN_DIRECTORY + "mvnmv4_merced/" + "mvnmv4-merced"
+# model = load_model(model)
 
 # check for allowed file extension
 def allowed_file(filename):
@@ -245,7 +242,10 @@ def upload():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         print('filename:', filename)
-        file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
+        client = azure_blob.DirectoryClient(CONNECTION_STRING, CONTAINER_NAME)
+        client.create_blob_from_stream(container_name=CONTAINER_NAME, blob_name=filename, stream=file)
+
+        # file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
 
     html = render_template('index.html')
     response = make_response(html)
