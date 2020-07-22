@@ -244,8 +244,9 @@ def upload():
         filename = secure_filename(file.filename)
         print('filename:', filename)
         client = azure_blob.DirectoryClient(CONNECTION_STRING, CONTAINER_NAME)
+        print('created client')
         client.create_blob_from_stream(container_name=CONTAINER_NAME, blob_name=filename, stream=file)
-
+        print('completed file upload')
         # file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
 
     html = render_template('index.html')

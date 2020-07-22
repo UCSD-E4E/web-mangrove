@@ -1,5 +1,4 @@
 import os
-# from azure.storage import BlobServiceClient
 from azure.storage.blob import BlockBlobService
 
 account_name = 'mangroveclassifier'   # Azure account name
@@ -10,11 +9,12 @@ class DirectoryClient:
     self.container_name = container_name
     # service_client = BlobServiceClient.from_connection_string(connection_string)
     # self.client = service_client.get_container_client(container_name)
-    self.bbs = BlockBlobService(account_name=account_name, account_key=account_key)
+    self.client = BlockBlobService(account_name=account_name, account_key=account_key)
     
     
   def create_blob_from_stream(self, container_name, blob_name, stream):
-    self.bbs.create_blob_from_stream(container_name, blob_name, stream)
+    print('in azure_blob from stream function')
+    self.client.create_blob_from_stream(container_name, blob_name, stream)
     return 
 
   def upload(self, source, dest):
