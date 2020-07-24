@@ -220,7 +220,7 @@ def classify():
     delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
     delete_files_in_dir(IMAGE_DIRECTORY+'/images/')'''
 
-    # Delete the files in the blob containers 
+    '''# Delete the files in the blob containers 
     # remove files in output-files container
     try: 
         client.rmdir('')
@@ -232,7 +232,12 @@ def classify():
     try: 
         client.rmdir('')
     except: 
-        print("error when deleting from blob storage")
+        print("error when deleting from blob storage")'''
+    
+    # delete model
+    delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables')
+
 
     return
 
