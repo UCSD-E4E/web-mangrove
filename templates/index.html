@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
    <head>
@@ -47,6 +45,8 @@
                {% endfor %}
                </ul>
               <br>
+              
+            
               <form action="{{ url_for('upload')}}" method="POST" enctype=multipart/form-data>
                <input type=file name=file>
                <br>
@@ -139,17 +139,5 @@
       
       
       <br>
-      
-      <script>     
-         function validate()
-         {  
-            if (confirm("Do you want to classify the images from Orto_Puerto_Gata_Tiles.zip?"))
-            {
-               return true;
-            }
-            else{
-               return false;
-            }            
-         }
-      </script>
-   
+   </body>
+</html>

@@ -39,7 +39,6 @@ PIL.Image.MAX_IMAGE_PIXELS = None
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
 
 # color the pics in visualization
 green_hue = (180-78)/360.0
