@@ -3,6 +3,7 @@ import azure_blob
 import string, random, requests
 import flash
 
+import json
 import os
 from os import path
 import sys
@@ -38,11 +39,6 @@ PIL.Image.MAX_IMAGE_PIXELS = None
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-
-
-#Set model location
-output_file = "results.csv"
-#store the model
 
 # color the pics in visualization
 green_hue = (180-78)/360.0
@@ -109,58 +105,7 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
 
 @server.route('/', methods=['GET', 'POST'])
 def home():
-    '''if request.method == 'POST':
-        file = request.files['file']
-        filename = secure_filename(file.filename)
-
-
-        fileextension = filename.rsplit('.',1)[1]
-        Randomfilename = id_generator()
-        filename = Randomfilename + '.' + fileextension
-        try:
-            # Create the BlockBlockService that is used to call the Blob service for the storage account
-            block_blob_service = BlockBlobService(account_name='mangroveclassifier', account_key='s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==')
-
-            # Create a container called 'quickstartblobs'.
-            container_name ='quickstartblobs'
-            block_blob_service.create_container(container_name)
-
-            # Set the permission so the blobs are public.
-            block_blob_service.set_container_acl(container_name, public_access=PublicAccess.Container)
-
-            # Upload the created file, use local_file_name for the blob name
-            block_blob_service.create_blob_from_stream(container_name, filename, file)
-
-            # List the blobs in the container
-            print("\nList blobs in the container")
-            generator = block_blob_service.list_blobs(container_name)
-            for blob in generator:
-                print("\t Blob name: " + blob.name)
-
-            # Clean up resources. This includes the container and the temp files
-            # block_blob_service.delete_container(container_name)
-        except Exception as e:
-            print(e)  '''
-        #ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
-        #return '''
-        #<!doctype html>
-        #<title>File Link</title>
-        #<h1>Uploaded File Link</h1>
-        #<p>''' + ref + '''</p>
-        #<img src="'''+ ref +'''">
-        #'''
-    #return 
-    '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-    <p><input type=file name=file>
-        <input type=submit value=Upload>
-    </form>
-    '''
     return render_template('index.html')
-    # return render_template('index.html', summary=str(type(model)))
 @server.route('/index')
 def index():
     return render_template('index.html')
@@ -281,8 +226,6 @@ def unzip():
     response = make_response(html)
     return response
 
-
-
 @server.route('/classify', methods=['GET'])
 def classify():
     
@@ -396,10 +339,11 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
 
 def start_dash():
     # open the tif image and create geojson file
+    using_prev = False # if the visualization should render prev stuff
+
     FILENAME = '0.tif'
     final_filename = 'mngrv.geojson'
     if path.exists(final_filename):
-        import json
         with open(final_filename) as f:
             mngrv_geojson = json.load(f)
     else:
@@ -409,7 +353,6 @@ def start_dash():
     FILENAME = '1.tif'
     final_filename = 'n-mngrv.geojson'
     if path.exists(final_filename):
-        import json
         with open(final_filename) as f:
             n_mngrv_geojson = json.load(f)
     else:
@@ -454,7 +397,7 @@ app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/
 global mngrv_geojson
 global n_mngrv_geojson
 
-# open the tif image and create geojson file
+'''# open the tif image and create geojson file
 FILENAME = '0.tif'
 final_filename = 'mngrv.geojson'
 if path.exists(final_filename):
@@ -472,7 +415,7 @@ if path.exists(final_filename):
     with open(final_filename) as f:
         n_mngrv_geojson = json.load(f)
 else:
-    n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+    n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)'''
 
 start_dash()
 

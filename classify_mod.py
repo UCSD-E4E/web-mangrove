@@ -81,7 +81,7 @@ def delete_files_in_dir(folder):
 
 def classify():
 
-    '''# download model from azure
+    '''    # download model from azure
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
 
@@ -93,8 +93,8 @@ def classify():
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
     list_of_files = list(client.ls_files('', recursive=False))
     print("number of tif files in output-files: ", len(list_of_files))
-    '''
-    # generate batches of 32 and download the files 32 at a time
+    
+    '''    # generate batches of 32 and download the files 32 at a time
     BATCH_SIZE = 32
     batch_list = get_batch_list(list_of_files, BATCH_SIZE)
 
@@ -146,22 +146,19 @@ def classify():
 
         # DELETE ALL TIFS IN images/images to prepare for the next batch 
         print('deleting images in folder')
-        delete_files_in_dir(UPLOAD_FOLDER)'''
+        delete_files_in_dir(UPLOAD_FOLDER)
     
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
-    '''client.download(source='', dest=IMAGE_DIRECTORY+'/images')'''
+    client.download(source='', dest=IMAGE_DIRECTORY+'/images')'''
     
 
-    # temp
-    '''result_df = pd.read_csv('content.csv')
-    result_df['filename']'''
-
-    '''dest_folders = []
+    result_df = pd.read_csv('content.csv')
+    dest_folders = []
     #Organize tiles into folders
     for index, row in tqdm(result_df.iterrows()):
         cur_file = IMAGE_DIRECTORY + "/" + row['filename']
-        cur_file = cur_file.replace("jpg","tif",2)
+        # cur_file = cur_file.replace("jpg","tif",2)
         classification = row['prediction'] 
 
         #set destination folder, and creates the folder if it doesn't exist
@@ -174,9 +171,9 @@ def classify():
         #moves file
         src = cur_file
         os.rename(src, dest)
-    print('organized into folders')'''
+    print('organized into folders')
 
-    ''' # recombine classified tiles for each class
+    # recombine classified tiles for each class
 
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
     # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
@@ -218,9 +215,9 @@ def classify():
     # Delete files in images/images
     delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
     delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
-    delete_files_in_dir(IMAGE_DIRECTORY+'/images/')'''
+    delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
 
-    '''# Delete the files in the blob containers 
+    # Delete the files in the blob containers 
     # remove files in output-files container
     try: 
         client.rmdir('')
@@ -232,17 +229,16 @@ def classify():
     try: 
         client.rmdir('')
     except: 
-        print("error when deleting from blob storage")'''
+        print("error when deleting from blob storage")
     
     # delete model
     delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables')
-
-
+    print("classification finished")
     return
+'''
 
-
-    '''# GENERATING PROBABILITY TILES
+    # GENERATING PROBABILITY TILES
     for index, sample in tqdm(result_df.iterrows()):
         # loading original image
         original = os.path.abspath(os.path.join(IMAGE_DIRECTORY, sample["filename"]))
@@ -258,12 +254,8 @@ def classify():
         # print('output: ', output)
         #creates new file with projection of past image
         with rasterio.open(output,'w',driver='GTiff',height=img.height,width=img.width,count=1,dtype=mask.dtype,crs='+proj=latlong',transform=img.transform,) as dst:dst.write(mask, 1)
-    print('probability tiles generated')'''
+    print('probability tiles generated')
     # Moving Files to Folders
-
-    
-
-    '''
    
     #probability tiles remain unmoved, so just get all the leftover tiles
     # run gdal_merge.py and prepare the argument array:     !gdal_merge.py -o /content/p.tif /content/images/images/*
@@ -278,6 +270,6 @@ def classify():
     # concat to create complete list of args
     command = "gdal_merge.py -o " + MAIN_DIRECTORY + "p.tif " + files_string
     os.system(command)
-    print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*') '''
-
+    print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*')
+'''
 
