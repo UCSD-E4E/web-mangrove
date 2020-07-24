@@ -81,9 +81,9 @@ def delete_files_in_dir(folder):
 
 def classify():
 
-    # download model from azure
+    '''# download model from azure
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
-    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
+    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)'''
 
     # load model
     model = MAIN_DIRECTORY + "mvnmv4-merced"
