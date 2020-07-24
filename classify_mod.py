@@ -75,7 +75,7 @@ def delete_files_in_dir(folder):
                 os.unlink(file_path)
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)'''
-            print('deleting: ' + UPLOAD_FOLDER + file_path)
+            print('deleting: ' + file_path)
             os.remove(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
