@@ -1,4 +1,4 @@
-import os
+import os, shutil
 import sys
 from tqdm.autonotebook import tqdm
 import tensorflow as tf
@@ -6,7 +6,28 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 import PIL
+import math
+import azure_blob
+from gis_utils import raster
+
+from tensorflow.keras.models import load_model
+
+
 PIL.Image.MAX_IMAGE_PIXELS = None
+
+MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
+# image directory. images/images contains the tif files
+IMAGE_DIRECTORY = MAIN_DIRECTORY + "images"
+
+UPLOAD_FOLDER = IMAGE_DIRECTORY + '/images/'
+
+
+account = 'mangroveclassifier'   # Azure account name
+key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
+CONTAINER_NAME = 'mvnmv4-merced' # Container name
+CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
+MODEL_CONTAINER_NAME = 'mvnmv4-merced' # Container name
+
 
 
 
@@ -29,57 +50,114 @@ def tif_to_jpg(file):
 		new_file = file.rstrip(".tif")
 		new_im.save(MAIN_DIRECTORY + "static/images/" + str(new_file)[-1] + ".jpg", "JPEG")
 
-def classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY):
+# input: list of files in the .zip files 
+# output: list of batch files where each sub list is of size 32 except the last one (to account for remainders)
+def get_batch_list(list_of_files, BATCH_SIZE):
+    length = len(list_of_files)
+    num_batches = math.floor(length/BATCH_SIZE) # number of batches with 32 files
 
-    #Read images using keras and split into batches
-    image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
-    data_gen = image_generator.flow_from_directory(directory=IMAGE_DIRECTORY,
-                                                        batch_size=32,
-                                                        shuffle=False,
-                                                        target_size=(256, 256))
+    length_to_split = [BATCH_SIZE] * num_batches
+    
+    last_batch_length = length % BATCH_SIZE
+    if last_batch_length != 0: 
+        length_to_split.append(last_batch_length)
+
+    from itertools import accumulate 
+    batch_list = [list_of_files[x - y: x] for x, y in zip(accumulate(length_to_split), length_to_split)]
+    return batch_list
+
+def delete_files_in_dir(folder):
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+    return
+    
+
+def classify():
+
+    '''# download model from azure
+    client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
+    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
+
+    # load model
+    model = MAIN_DIRECTORY + "mvnmv4-merced"
+    model = load_model(model)'''
+
+    output_container_name = 'output-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
+    list_of_files = list(client.ls_files('', recursive=False))
+    print("number of tif files in output-files: ", len(list_of_files))
+    '''
+    # generate batches of 32 and download the files 32 at a time
+    BATCH_SIZE = 32
+    batch_list = get_batch_list(list_of_files, BATCH_SIZE)
 
     #Set up dataframe that will hold classifications
     column_names = ["prediction","p_0","p_1","filename"]
     result_df = pd.DataFrame(columns=column_names)
 
-    #predict probabilities from model for the batches
-    predictions = model.predict(data_gen)
+    for n, batch in enumerate(batch_list):
+        # Download all tifs in the batch
+        for i in range(len(batch)):
+            client.download_file(batch[i], str(MAIN_DIRECTORY + "images/images/"))
+            
+        #Read images using keras and split into batches
+        image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+        data_gen = image_generator.flow_from_directory(directory=IMAGE_DIRECTORY,
+                                                            batch_size=32,
+                                                            shuffle=False,
+                                                            target_size=(256, 256))
+        #predict probabilities from model for the batches
+        print('predict for batch', n)
+        predictions = model.predict(data_gen)
 
-    print(predictions.shape)
+        #associate filenames and classification for each prediction
+        for j,prediction in tqdm(enumerate(predictions)):
+            idx = (n*BATCH_SIZE) + j
+            result_df.loc[idx,"filename"] = data_gen.filenames[i]
 
-    #associate filenames and classification for each prediction
-    for i,prediction in tqdm(enumerate(predictions)):
-        result_df.loc[i,"filename"] = data_gen.filenames[i]
+            #calculating predictions 
+            result_df.loc[idx,"p_0"] = sigmoid(prediction[0])
+            result_df.loc[idx,"p_1"] = sigmoid(prediction[1])
+            
+            #getting final class prediction
+            result_df.loc[idx,"prediction"] = np.argmax(prediction)
 
-        #calculating predictions 
-        result_df.loc[i,"p_0"] = sigmoid(prediction[0])
-        result_df.loc[i,"p_1"] = sigmoid(prediction[1])
-        
-        #getting final class prediction
-        result_df.loc[i,"prediction"] = np.argmax(prediction)
-        # print(i, prediction)
+        # DOWNSAMPLE ALL THE IMAGES
+        print('downsampling images')
+        ds_factor = 1/20
+        for rel_filename in batch:
+            FILENAME = UPLOAD_FOLDER + rel_filename
+            img, _ = raster.load_image(FILENAME)
+            _, _ = raster.downsample_raster(img, ds_factor, FILENAME)
 
 
-    # GENERATING PROBABILITY TILES
-    for index, sample in tqdm(result_df.iterrows()):
-        # loading original image
-        original = os.path.abspath(os.path.join(IMAGE_DIRECTORY, sample["filename"]))
-        # print('original: ', original)
-        img = rasterio.open(original) 
+        # REUPLOAD DOWNSAMPLE TIFS TO DATABASE
+        print('reuploading batch')
+        for rel_filename in batch:
+            FILENAME = UPLOAD_FOLDER + rel_filename
+            client.upload_file(FILENAME, rel_filename)
 
-        #creating new raster mask with pixel values of conditional probability
-        mask = sample["p_0"] * np.ones(shape=(img.width, img.height))
+        # DELETE ALL TIFS IN images/images to prepare for the next batch 
+        print('deleting images in folder')
+        delete_files_in_dir(UPLOAD_FOLDER)'''
+    
+    # DOWNLOAD ALL files in output blob in the hash folder 
+    # to fix this issue, ask the user for the prefix of their files? idk...
+    '''client.download(source='', dest=IMAGE_DIRECTORY+'/images')'''
+    
 
-        #saving file output to new file
-        filename = "prob_" + os.path.basename(sample["filename"])
-        output = os.path.abspath(os.path.join(IMAGE_DIRECTORY, os.path.dirname(sample["filename"]), filename))
-        # print('output: ', output)
-        #creates new file with projection of past image
-        with rasterio.open(output,'w',driver='GTiff',height=img.height,width=img.width,count=1,dtype=mask.dtype,crs='+proj=latlong',transform=img.transform,) as dst:dst.write(mask, 1)
-    print('probability tiles generated')
-    # Moving Files to Folders
+    # temp
+    '''result_df = pd.read_csv('content.csv')
+    result_df['filename']'''
 
-    dest_folders = []
+    '''dest_folders = []
     #Organize tiles into folders
     for index, row in tqdm(result_df.iterrows()):
         cur_file = IMAGE_DIRECTORY + "/" + row['filename']
@@ -96,9 +174,9 @@ def classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY):
         #moves file
         src = cur_file
         os.rename(src, dest)
-    print('organized into folders')
+    print('organized into folders')'''
 
-    # recombine classified tiles for each class
+    ''' # recombine classified tiles for each class
 
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
     # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
@@ -128,9 +206,62 @@ def classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY):
     os.system(command)
     print('ran !gdal_merge.py -o /content/0.tif /content/images/0/*')
 
+    # create .shp files
+    os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
+    os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
+    print('ran gdal_polygonize')
+
+    # store tif as jpg for visualization
+    tif_to_jpg(MAIN_DIRECTORY + "1.tif")
+    tif_to_jpg(MAIN_DIRECTORY + "0.tif")
+
+    # Delete files in images/images
+    delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
+    delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
+    delete_files_in_dir(IMAGE_DIRECTORY+'/images/')'''
+
+    # Delete the files in the blob containers 
+    # remove files in output-files container
+    try: 
+        client.rmdir('')
+    except: 
+        print("error when deleting from blob storage")
+    # remove files in input-files container
+    input_container_name = 'input-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container_name)
+    try: 
+        client.rmdir('')
+    except: 
+        print("error when deleting from blob storage")
+
+    return
+
+
+    '''# GENERATING PROBABILITY TILES
+    for index, sample in tqdm(result_df.iterrows()):
+        # loading original image
+        original = os.path.abspath(os.path.join(IMAGE_DIRECTORY, sample["filename"]))
+        # print('original: ', original)
+        img = rasterio.open(original) 
+
+        #creating new raster mask with pixel values of conditional probability
+        mask = sample["p_0"] * np.ones(shape=(img.width, img.height))
+
+        #saving file output to new file
+        filename = "prob_" + os.path.basename(sample["filename"])
+        output = os.path.abspath(os.path.join(IMAGE_DIRECTORY, os.path.dirname(sample["filename"]), filename))
+        # print('output: ', output)
+        #creates new file with projection of past image
+        with rasterio.open(output,'w',driver='GTiff',height=img.height,width=img.width,count=1,dtype=mask.dtype,crs='+proj=latlong',transform=img.transform,) as dst:dst.write(mask, 1)
+    print('probability tiles generated')'''
+    # Moving Files to Folders
+
+    
+
+    '''
    
     #probability tiles remain unmoved, so just get all the leftover tiles
-    # run gdal_merge.py and prepare the argument array:     !gdal_merge.py -o /content/p.tif /content/images/images/*'''
+    # run gdal_merge.py and prepare the argument array:     !gdal_merge.py -o /content/p.tif /content/images/images/*
     # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
     gdal_merge_args = []
     gdal_merge_args = list(['-o', str(MAIN_DIRECTORY + 'p.tif')])
@@ -142,15 +273,6 @@ def classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY):
     # concat to create complete list of args
     command = "gdal_merge.py -o " + MAIN_DIRECTORY + "p.tif " + files_string
     os.system(command)
-    print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*')
+    print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*') '''
 
-    # TO DO HERE: STORE 1.TIF 0.TIF P.TIF SOMEWHERE
 
-    # create .shp files
-    os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
-    os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
-    print('ran gdal_polygonize')
-
-    # store tif as jpg for visualization
-    tif_to_jpg(MAIN_DIRECTORY + "1.tif")
-    tif_to_jpg(MAIN_DIRECTORY + "0.tif")

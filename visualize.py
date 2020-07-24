@@ -130,14 +130,19 @@ def shift_hue(arr,hout):
     rgb=hsv_to_rgb(hsv)
     return rgb
 
-def get_im(FILENAME, ds_factor, hue):
-    Image.MAX_IMAGE_PIXELS = None
-
-    # downsample by 
+# input: filename
+# output: returns a downsampled image object
+def downsample_im(FILENAME, ds_factor):
     image = Image.open(FILENAME)
     (width, height) = (int(image.width / ds_factor), int(image.height / ds_factor))
     image = image.resize((width,height), Image.ANTIALIAS)
 
+
+def get_im(FILENAME, ds_factor, hue):
+    Image.MAX_IMAGE_PIXELS = None
+
+    # downsample by 
+    image = downsample_im(FILENAME, ds_factor)
     arr = np.array(image)
 
     image_hue = Image.fromarray(shift_hue(arr, hue), 'RGBA')

@@ -34,8 +34,6 @@ from PIL import Image
 import PIL
 PIL.Image.MAX_IMAGE_PIXELS = None
 
-from tensorflow.keras.models import load_model
-
 # dash 
 import dash
 import dash_core_components as dcc
@@ -83,22 +81,12 @@ server = Flask(__name__)
 server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# unzip model zip file
-# os.system("unzip -n " + MODEL_PATH)
-
-account = 'mangroveclassifier'   # Azure account name
-key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
-CONTAINER_NAME = 'mvnmv4-merced' # Container name
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
 
 
-# client = azure_blob.DirectoryClient(CONNECTION_STRING, CONTAINER_NAME)
-'''
-# move all this to classify_mod in the end
-client.download('mvnmv4-merced/', './mvnmv4_merced')'''
+# unzip model zip file
+# os.system("unzip -n " + MODEL_PATH)
 
-# model = MAIN_DIRECTORY + "mvnmv4_merced/" + "mvnmv4-merced"
-# model = load_model(model)
 
 # check for allowed file extension
 def allowed_file(filename):
@@ -243,9 +231,10 @@ def upload():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         print('filename:', filename)
-        client = azure_blob.DirectoryClient(CONNECTION_STRING, CONTAINER_NAME)
+        input_container = 'input-files'
+        client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container)
         print('created client')
-        client.create_blob_from_stream(container_name=CONTAINER_NAME, blob_name=filename, stream=file)
+        client.create_blob_from_stream(blob_name=filename, stream=file)
         print('completed file upload')
         # file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
 
@@ -297,8 +286,7 @@ def unzip():
 @server.route('/classify', methods=['GET'])
 def classify():
     
-    classify_mod.classify(model, IMAGE_DIRECTORY, MAIN_DIRECTORY)
-        
+    classify_mod.classify()
     html = render_template('index.html')
     response = make_response(html)
     return response

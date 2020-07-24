@@ -12,41 +12,22 @@ class DirectoryClient:
     self.client = BlockBlobService(account_name=account_name, account_key=account_key)
     
     
-  def create_blob_from_stream(self, container_name, blob_name, stream):
+  # send big .zip file to blob just from filestream (no downloading)
+  def create_blob_from_stream(self, blob_name, stream):
     print('in azure_blob from stream function')
-    self.client.create_blob_from_stream(container_name, blob_name, stream)
+    self.client.create_blob_from_stream(self.container_name, blob_name, stream)
     return 
-
-  def upload(self, source, dest):
-    '''
-    Upload a file or directory to a path inside the container
-    '''
-    if (os.path.isdir(source)):
-      self.upload_dir(source, dest)
-    else:
-      self.upload_file(source, dest)
-
+  
   def upload_file(self, source, dest):
     '''
     Upload a single file to a path inside the container
     '''
     print(f'Uploading {source} to {dest}')
+    # do i need this with open thing??? not too sure bc i never use the data var
     with open(source, 'rb') as data:
-      self.client.upload_blob(name=dest, data=data)
+      self.client.create_blob_from_path(self.container_name, dest, source)
+    return
 
-  def upload_dir(self, source, dest):
-    '''
-    Upload a directory to a path inside the container
-    '''
-    prefix = '' if dest == '' else dest + '/'
-    prefix += os.path.basename(source) + '/'
-    for root, dirs, files in os.walk(source):
-      for name in files:
-        dir_part = os.path.relpath(root, source)
-        dir_part = '' if dir_part == '.' else dir_part + '/'
-        file_path = os.path.join(root, name)
-        blob_path = prefix + dir_part + name
-        self.upload_file(file_path, blob_path)
 
   def download(self, source, dest):
     '''
@@ -64,29 +45,31 @@ class DirectoryClient:
         dest += '/'
       # append the directory name from source to the destination
       dest += os.path.basename(os.path.normpath(source)) + '/'
-
+      
       blobs = [source + blob for blob in blobs]
       for blob in blobs:
         blob_dest = dest + os.path.relpath(blob, source)
-        self.download_file(blob, blob_dest)
+        print("\nDownloading blob to " + blob_dest)
+        self.client.get_blob_to_path(self.container_name, blob, blob_dest)
     else:
-      self.download_file(source, dest)
+      self.client.get_blob_to_path(self.container_name, source, dest)
 
   def download_file(self, source, dest):
     '''
-    Download a single file to a path on the local filesystem
+    # Download a single file to a path on the local filesystem
     '''
     # dest is a directory if ending with '/' or '.', otherwise it's a file
     if dest.endswith('.'):
       dest += '/'
     blob_dest = dest + os.path.basename(source) if dest.endswith('/') else dest
 
-    print(f'Downloading {source} to {blob_dest}')
+    print( f'Downloading {source} to {blob_dest}')
     os.makedirs(os.path.dirname(blob_dest), exist_ok=True)
-    bc = self.client.get_blob_client(blob=source)
-    with open(blob_dest, 'wb') as file:
-      data = bc.download_blob()
-      file.write(data.readall())
+    self.client.get_blob_to_path(self.container_name, source, blob_dest)
+    '''data = bc.download_blob()
+    file.write(data.readall())'''
+
+ 
 
   def ls_files(self, path, recursive=False):
     '''
@@ -95,9 +78,8 @@ class DirectoryClient:
     if not path == '' and not path.endswith('/'):
       path += '/'
     
-    blob_iter = self.client.list_blobs(self.container_name)
+    blob_iter = self.client.list_blobs(self.container_name, prefix=path)
   
-    list_blobs(name_starts_with=path)
     files = []
     for blob in blob_iter:
       relative_path = os.path.relpath(blob.name, path)
@@ -112,7 +94,7 @@ class DirectoryClient:
     if not path == '' and not path.endswith('/'):
       path += '/'
 
-    blob_iter = self.client.list_blobs(name_starts_with=path)
+    blob_iter = self.client.list_blobs(self.container_name, prefix=path)
     dirs = []
     for blob in blob_iter:
       relative_dir = os.path.dirname(os.path.relpath(blob.name, path))
@@ -136,13 +118,15 @@ class DirectoryClient:
     Remove a directory and its contents recursively
     '''
     blobs = self.ls_files(path, recursive=True)
-    if not blobs:
+    if blobs==[]:
       return
 
     if not path == '' and not path.endswith('/'):
       path += '/'
     blobs = [path + blob for blob in blobs]
-    print(f'Deleting {", ".join(blobs)}')
-    self.client.delete_blobs(*blobs)
+    print(f'Deleting blobs in ' + str(self.container_name))
+    for blob in blobs: 
+      self.client.delete_blob(blob_name=blob, container_name=self.container_name)
+    
 
     
