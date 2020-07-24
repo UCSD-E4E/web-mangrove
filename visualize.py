@@ -138,11 +138,12 @@ def downsample_im(FILENAME, ds_factor):
     image = image.resize((width,height), Image.ANTIALIAS)
 
 
-def get_im(FILENAME, ds_factor, hue):
+def get_im(FILENAME, hue):
     Image.MAX_IMAGE_PIXELS = None
 
     # downsample by 
-    image = downsample_im(FILENAME, ds_factor)
+    # image = downsample_im(FILENAME, ds_factor)
+    image = Image.open(FILENAME)
     arr = np.array(image)
 
     image_hue = Image.fromarray(shift_hue(arr, hue), 'RGBA')

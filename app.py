@@ -3,9 +3,9 @@ import azure_blob
 import string, random, requests
 import flash
 
-import json
 import os
 from os import path
+import json
 import sys
 from flask import Flask, render_template, make_response, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
@@ -39,6 +39,7 @@ PIL.Image.MAX_IMAGE_PIXELS = None
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 # color the pics in visualization
 green_hue = (180-78)/360.0
@@ -105,7 +106,58 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
 
 @server.route('/', methods=['GET', 'POST'])
 def home():
+    '''if request.method == 'POST':
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+
+
+        fileextension = filename.rsplit('.',1)[1]
+        Randomfilename = id_generator()
+        filename = Randomfilename + '.' + fileextension
+        try:
+            # Create the BlockBlockService that is used to call the Blob service for the storage account
+            block_blob_service = BlockBlobService(account_name='mangroveclassifier', account_key='s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==')
+
+            # Create a container called 'quickstartblobs'.
+            container_name ='quickstartblobs'
+            block_blob_service.create_container(container_name)
+
+            # Set the permission so the blobs are public.
+            block_blob_service.set_container_acl(container_name, public_access=PublicAccess.Container)
+
+            # Upload the created file, use local_file_name for the blob name
+            block_blob_service.create_blob_from_stream(container_name, filename, file)
+
+            # List the blobs in the container
+            print("\nList blobs in the container")
+            generator = block_blob_service.list_blobs(container_name)
+            for blob in generator:
+                print("\t Blob name: " + blob.name)
+
+            # Clean up resources. This includes the container and the temp files
+            # block_blob_service.delete_container(container_name)
+        except Exception as e:
+            print(e)  '''
+        #ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
+        #return '''
+        #<!doctype html>
+        #<title>File Link</title>
+        #<h1>Uploaded File Link</h1>
+        #<p>''' + ref + '''</p>
+        #<img src="'''+ ref +'''">
+        #'''
+    #return 
+    '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file>
+        <input type=submit value=Upload>
+    </form>
+    '''
     return render_template('index.html')
+    # return render_template('index.html', summary=str(type(model)))
 @server.route('/index')
 def index():
     return render_template('index.html')
@@ -151,7 +203,16 @@ def download():
         os.system('rm -rf ' + MAIN_DIRECTORY + 'static/images/' + f)
         print('rm -rf ' + MAIN_DIRECTORY + 'static/images/' + f)
 
-
+    os.system('rm -rf ' + MAIN_DIRECTORY + 'image_m_green.png')
+    print('rm -rf ' + MAIN_DIRECTORY + 'image_m_green.png')
+    os.system('rm -rf ' + MAIN_DIRECTORY + 'image_nm_red.png')
+    print('rm -rf ' + MAIN_DIRECTORY + 'image_nm_red.png')
+    
+    os.system('rm -rf ' + MAIN_DIRECTORY + 'mngrv.geojson')
+    print('rm -rf ' + MAIN_DIRECTORY + 'mngrv.geojson')
+    os.system('rm -rf ' + MAIN_DIRECTORY + 'n-mngrv.geojson')
+    print('rm -rf ' + MAIN_DIRECTORY + 'n-mngrv.geojson')
+    
     html = render_template('index.html')
     response = make_response(html)
     return response
@@ -207,7 +268,8 @@ def uploaded_file(filename):
     return send_from_directory(MAIN_DIRECTORY,
                                filename)
 
-@server.route('/unzip', methods=['GET'])
+# dont need this anymore because the azure function AzUnzipMangroves takes care of it (when a zip files is uploaded to the Blob, the unzip function is triggered)
+'''@server.route('/unzip', methods=['GET'])
 def unzip():
 
     uploaded_file_name = os.listdir('images/images')[0]
@@ -225,6 +287,8 @@ def unzip():
     html = render_template('index.html')
     response = make_response(html)
     return response
+'''
+
 
 @server.route('/classify', methods=['GET'])
 def classify():
@@ -246,12 +310,12 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
 
     image_filename = "image_m_green.png"
     if not path.exists(image_filename):
-        image_filename = "image_m_green.png"
+        image_filename = "image_m_green-perm.png"
     image_m_green = base64.b64encode(open(image_filename, 'rb').read())
 
     image_filename = "image_nm_red.png"
     if not path.exists(image_filename):
-        image_filename = "image_nm_red.png"
+        image_filename = "image_nm_red-perm.png"
     image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
 
     mngrv_tiles = len(mngrv_geojson['features'])
@@ -338,9 +402,105 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
     return dict_of_fig
 
 def start_dash():
-    # open the tif image and create geojson file
-    using_prev = False # if the visualization should render prev stuff
+    # open the permanent tif image and create geojson file
+    final_filename = 'mngrv-perm.geojson'
+    with open(final_filename) as f:
+        mngrv_geojson = json.load(f)
 
+    # open the tif image and create geojson file
+    final_filename = 'n-mngrv-perm.geojson'
+    with open(final_filename) as f:
+        n_mngrv_geojson = json.load(f)
+    
+    version = ['mangrove', 'non-mangrove']
+    if mngrv_geojson != None and n_mngrv_geojson != None:
+        dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
+
+        app.layout = html.Div([html.Button('View My Classification', id='view-mine', n_clicks=0), 
+            dcc.Checklist(id='radiobtn', 
+            options=[
+                {'label': 'Mangrove', 'value': 'mangrove'},
+                {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
+                # {'label': 'Everything', 'value': 'everything'},
+                # {'label': 'Probability', 'value': 'prob'}
+            ],
+            value=['mangrove', 'non-mangrove'],
+            labelStyle={'display': 'inline-block', 'textAlign': 'center'}
+        )  , 
+            dcc.Graph(id='viz', figure=dict_of_fig)
+            ])
+    return
+
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
+
+global mngrv_geojson
+global n_mngrv_geojson
+
+start_dash()
+
+@app.callback(dash.dependencies.Output('viz', 'figure'),
+[dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
+dash.dependencies.Input('radiobtn', 'value')])
+def update_figure(n_clicks, version):
+    print('version in app callback: ', version)
+    print('call back: ', dash.callback_context.triggered)
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print(changed_id)
+    print('n_clicks', n_clicks)
+
+    # if you click the view my classification button, render the classfication
+    if (int(n_clicks)> 0):
+        # open the tif image and create geojson file
+        FILENAME = '0.tif'
+        final_filename = 'mngrv.geojson'
+        if path.exists(final_filename):
+            with open(final_filename) as f:
+                mngrv_geojson = json.load(f)
+        else:
+            mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+
+        # open the tif image and create geojson file
+        FILENAME = '1.tif'
+        final_filename = 'n-mngrv.geojson'
+        if path.exists(final_filename):
+            with open(final_filename) as f:
+                n_mngrv_geojson = json.load(f)
+        else:
+            n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+
+        FILENAME = '0.tif'
+        saved_img = "image_m_green.png"
+        if not path.exists(saved_img) and path.exists(FILENAME):
+            image_m_green = visualize.get_im(FILENAME, green_hue)
+            image_m_green.save("image_m_green.png","PNG")
+            print("green m image saved")
+
+        FILENAME = '1.tif'
+        saved_img = "image_nm_red.png"
+        if not path.exists(saved_img) and path.exists(FILENAME):
+            image_nm_red = visualize.get_im(FILENAME, red_hue)
+            image_nm_red.save("image_nm_red.png","PNG")
+            print("red nm image saved")
+    else: 
+        final_filename = 'mngrv-perm.geojson'
+        with open(final_filename) as f:
+            mngrv_geojson = json.load(f)
+
+        # open the tif image and create geojson file
+        final_filename = 'n-mngrv-perm.geojson'
+        with open(final_filename) as f:
+            n_mngrv_geojson = json.load(f)
+
+    dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
+    return dict_of_fig
+
+'''@app.callback(dash.dependencies.Output('viz', 'figure'), 
+[dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
+dash.dependencies.Input('radiobtn', 'value')])
+def update_output(version):
+    print('version in app callback: ', version)
+    # open the tif image and create geojson file
     FILENAME = '0.tif'
     final_filename = 'mngrv.geojson'
     if path.exists(final_filename):
@@ -357,74 +517,10 @@ def start_dash():
             n_mngrv_geojson = json.load(f)
     else:
         n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
-
-    FILENAME = '0.tif'
-    saved_img = "image_m_green.png"
-    if not path.exists(saved_img):
-        image_m_green = visualize.get_im(FILENAME, ds_factor, green_hue)
-        image_m_green.save("image_m_green.png","PNG")
-        print("green m image saved")
-
-    FILENAME = '1.tif'
-    saved_img = "image_nm_red.png"
-    if not path.exists(saved_img):
-        image_nm_red = visualize.get_im(FILENAME, ds_factor, red_hue)
-        image_nm_red.save("image_nm_red.png","PNG")
-        print("red nm image saved")
-
-    version = ['mangrove', 'non-mangrove']
-    if mngrv_geojson != None and n_mngrv_geojson != None:
-        dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
-
-        app.layout = html.Div(children=[
-            dcc.Checklist(id='radiobtn', 
-            options=[
-                {'label': 'Mangrove', 'value': 'mangrove'},
-                {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
-                # {'label': 'Everything', 'value': 'everything'},
-                {'label': 'Probability', 'value': 'prob'}
-            ],
-            value=['mangrove', 'non-mangrove'],
-            labelStyle={'display': 'inline-block', 'textAlign': 'center'}
-        )  , 
-            dcc.Graph(id='viz', figure=dict_of_fig)
-            ])
-    return
-
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
-
-global mngrv_geojson
-global n_mngrv_geojson
-
-'''# open the tif image and create geojson file
-FILENAME = '0.tif'
-final_filename = 'mngrv.geojson'
-if path.exists(final_filename):
-    import json
-    with open(final_filename) as f:
-        mngrv_geojson = json.load(f)
-else:
-    mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
-
-# open the tif image and create geojson file
-FILENAME = '1.tif'
-final_filename = 'n-mngrv.geojson'
-if path.exists(final_filename):
-    import json
-    with open(final_filename) as f:
-        n_mngrv_geojson = json.load(f)
-else:
-    n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)'''
-
-start_dash()
-
-@app.callback(dash.dependencies.Output('viz', 'figure'),
-[dash.dependencies.Input('radiobtn', 'value')])
-def update_figure(version):
-    print('version in app callback: ', version)
+    
     dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
-    return dict_of_fig
+    return dict_of_fig'''
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)

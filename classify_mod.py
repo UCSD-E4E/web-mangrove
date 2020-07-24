@@ -81,20 +81,20 @@ def delete_files_in_dir(folder):
 
 def classify():
 
-    '''    # download model from azure
+    # download model from azure
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
 
     # load model
     model = MAIN_DIRECTORY + "mvnmv4-merced"
-    model = load_model(model)'''
+    model = load_model(model)
 
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
     list_of_files = list(client.ls_files('', recursive=False))
     print("number of tif files in output-files: ", len(list_of_files))
     
-    '''    # generate batches of 32 and download the files 32 at a time
+    # generate batches of 32 and download the files 32 at a time
     BATCH_SIZE = 32
     batch_list = get_batch_list(list_of_files, BATCH_SIZE)
 
@@ -150,12 +150,13 @@ def classify():
     
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
-    client.download(source='', dest=IMAGE_DIRECTORY+'/images')'''
+    client.download(source='', dest=IMAGE_DIRECTORY+'/images')
     
 
-    result_df = pd.read_csv('content.csv')
+    # result_df = pd.read_csv('content.csv') # TEMP!
+
     dest_folders = []
-    #Organize tiles into folders
+    # Organize tiles into folders
     for index, row in tqdm(result_df.iterrows()):
         cur_file = IMAGE_DIRECTORY + "/" + row['filename']
         # cur_file = cur_file.replace("jpg","tif",2)
