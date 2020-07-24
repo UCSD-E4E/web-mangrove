@@ -4,11 +4,11 @@ from tqdm.autonotebook import tqdm
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import raster
 from PIL import Image
 import PIL
 import math
 import azure_blob
-from gis_utils import raster
 
 from tensorflow.keras.models import load_model
 
@@ -131,7 +131,7 @@ def classify():
 
         # DOWNSAMPLE ALL THE IMAGES
         print('downsampling images')
-        ds_factor = 1/20
+        ds_factor = 1/10
         for rel_filename in batch:
             FILENAME = UPLOAD_FOLDER + rel_filename
             img, _ = raster.load_image(FILENAME)

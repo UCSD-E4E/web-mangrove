@@ -45,7 +45,6 @@ import dash_bootstrap_components as dbc
 green_hue = (180-78)/360.0
 red_hue = (180-180)/360.0
 
-ds_factor = 8
 
 # TO DO: ADD OS FUNCTIONS TO MAKE IT RUN ON ANYONE'S COMPUTER
 print('MAIN_DIRECTORY from OS: ', os.path.dirname(os.path.realpath(__file__)))
