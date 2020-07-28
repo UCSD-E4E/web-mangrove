@@ -9,6 +9,7 @@ from PIL import Image
 import PIL
 import math
 import azure_blob
+import gc
 
 from tensorflow.keras.models import load_model
 
@@ -27,9 +28,6 @@ key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha3
 CONTAINER_NAME = 'mvnmv4-merced' # Container name
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
 MODEL_CONTAINER_NAME = 'mvnmv4-merced' # Container name
-
-
-
 
 # add str to the begining of every element in list
 def prepend(list, str): 
@@ -150,6 +148,8 @@ def classify():
         # DELETE ALL TIFS IN images/images to prepare for the next batch 
         print('deleting images in folder')
         delete_files_in_dir(UPLOAD_FOLDER)
+
+        gc.collect()
     
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
