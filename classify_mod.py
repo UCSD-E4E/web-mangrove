@@ -6,6 +6,9 @@ import pandas as pd
 import numpy as np
 import raster
 from PIL import Image
+
+import memory_profiler
+
 import PIL
 import math
 import azure_blob
@@ -104,21 +107,39 @@ def classify():
     result_df = pd.DataFrame(columns=column_names)
 
     for n, batch in enumerate(batch_list):
+        m1 = memory_profiler.memory_usage()
         # Download all tifs in the batch
+        # Memory: 0.16015625
         for i in range(len(batch)):
             client.download_file(batch[i], str(MAIN_DIRECTORY + "images/images/"))
             
+        m2 = memory_profiler.memory_usage()
+        mem_diff = m2[0] - m1[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
         #Read images using keras and split into batches
+        # Memory: 0
         image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
         data_gen = image_generator.flow_from_directory(directory=IMAGE_DIRECTORY,
                                                             batch_size=32,
                                                             shuffle=False,
                                                             target_size=(256, 256))
+        m3 = memory_profiler.memory_usage()
+        mem_diff = m3[0] - m2[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
         #predict probabilities from model for the batches
+        # Memory: 50.3984375 Mb
         print('predict for batch', n)
         predictions = model.predict(data_gen)
 
+        m4 = memory_profiler.memory_usage()
+        mem_diff = m4[0] - m3[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
+
         #associate filenames and classification for each prediction
+        # Memory: 0.19 Mb
         for j,prediction in tqdm(enumerate(predictions)):
             idx = (n*BATCH_SIZE) + j
             result_df.loc[idx,"filename"] = data_gen.filenames[i]
@@ -130,7 +151,12 @@ def classify():
             #getting final class prediction
             result_df.loc[idx,"prediction"] = np.argmax(prediction)
 
+        m5 = memory_profiler.memory_usage()
+        mem_diff = m5[0] - m4[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
         # DOWNSAMPLE ALL THE IMAGES
+        # Memory: 3.43Mb
         print('downsampling images')
         ds_factor = 1/10
         for rel_filename in batch:
@@ -138,18 +164,34 @@ def classify():
             img, _ = raster.load_image(FILENAME)
             _, _ = raster.downsample_raster(img, ds_factor, FILENAME)
 
+        m6 = memory_profiler.memory_usage()
+        mem_diff = m6[0] - m5[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
 
         # REUPLOAD DOWNSAMPLE TIFS TO DATABASE
+        # memory: 0Mb
         print('reuploading batch')
         for rel_filename in batch:
             FILENAME = UPLOAD_FOLDER + rel_filename
             client.upload_file(FILENAME, rel_filename)
+        
+
+        m7 = memory_profiler.memory_usage()
+        mem_diff = m7[0] - m6[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+
 
         # DELETE ALL TIFS IN images/images to prepare for the next batch 
+        # Memory: 54.1953125 Mb 
         print('deleting images in folder')
         delete_files_in_dir(UPLOAD_FOLDER)
-
-        gc.collect()
+        m8 = memory_profiler.memory_usage()
+        mem_diff = m8[0] - m1[0]
+        print(f"It took {mem_diff} Mb to execute this method")
+        
+        gc.get_stats()
+        # gc.collect()
     
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
