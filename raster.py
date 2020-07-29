@@ -1,6 +1,5 @@
 import rasterio
 from rasterio.enums import Resampling
-import gdal
 
 '''
 load_image
