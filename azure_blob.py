@@ -37,6 +37,7 @@ class DirectoryClient:
       raise Exception('A destination must be provided')
 
     blobs = self.ls_files(source, recursive=True)
+    print('blobs to download:', blobs)
     if blobs:
       # if source is a directory, dest must also be a directory
       if not source == '' and not source.endswith('/'):
