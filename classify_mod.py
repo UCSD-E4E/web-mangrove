@@ -109,14 +109,14 @@ def classify():
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     download_model(client_model)
 
-    # load model
-    model = MAIN_DIRECTORY + "mvnmv4-merced"
-    model = load_model(model)
-    
 
     for n, batch in enumerate(batch_list):
 
         m1 = memory_profiler.memory_usage()
+        # load model
+        model = MAIN_DIRECTORY + "mvnmv4-merced"
+        model = load_model(model)
+        
         # Download all tifs in the batch
         # Memory: 0.16015625
         for i in range(len(batch)):
@@ -141,8 +141,9 @@ def classify():
         # Memory: 50.3984375 Mb
         print('predict for batch', n)
         predictions = model.predict_generator(data_gen)
-
         tf.keras.backend.clear_session()
+        
+        gc.collect()
 
         m4 = memory_profiler.memory_usage()
         mem_diff = m4[0] - m3[0]
@@ -201,8 +202,8 @@ def classify():
         mem_diff = m8[0] - m1[0]
         print(f"It took {mem_diff} Mb to execute this method")
         
-        gc.get_stats()
-        # gc.collect()
+        # gc.get_stats()
+        gc.collect()
     
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
