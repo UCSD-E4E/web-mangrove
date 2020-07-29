@@ -210,7 +210,10 @@ def classify():
     time.sleep(10)'''
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
-    client.download(source='', dest=IMAGE_DIRECTORY+'/images')
+
+    blobs = client.ls_files(path='')
+    for blob in blobs: 
+        client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
     
     result_df = pd.read_csv('content.csv') # TEMP!
 
