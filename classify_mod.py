@@ -80,16 +80,8 @@ def delete_files_in_dir(folder):
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
     return
-    
+
 def classify():
-
-    '''# download model from azure
-    client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
-    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)'''
-
-    # load model
-    model = MAIN_DIRECTORY + "mvnmv4-merced"
-    model = load_model(model)
 
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
@@ -104,7 +96,17 @@ def classify():
     column_names = ["prediction","p_0","p_1","filename"]
     result_df = pd.DataFrame(columns=column_names)
 
+    # download model from azure
+    client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
+    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
+
+    # load model
+    model = MAIN_DIRECTORY + "mvnmv4-merced"
+    model = load_model(model)
+    
+
     for n, batch in enumerate(batch_list):
+
         m1 = memory_profiler.memory_usage()
         # Download all tifs in the batch
         # Memory: 0.16015625
@@ -132,7 +134,6 @@ def classify():
         predictions = model.predict_generator(data_gen)
 
         tf.keras.backend.clear_session()
-
 
         m4 = memory_profiler.memory_usage()
         mem_diff = m4[0] - m3[0]
