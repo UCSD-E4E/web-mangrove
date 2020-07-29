@@ -16,7 +16,6 @@ import gc
 
 from tensorflow.keras.models import load_model
 
-
 PIL.Image.MAX_IMAGE_PIXELS = None
 
 MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -82,7 +81,6 @@ def delete_files_in_dir(folder):
             print('Failed to delete %s. Reason: %s' % (file_path, e))
     return
     
-
 def classify():
 
     '''# download model from azure
@@ -131,7 +129,10 @@ def classify():
         #predict probabilities from model for the batches
         # Memory: 50.3984375 Mb
         print('predict for batch', n)
-        predictions = model.predict(data_gen)
+        predictions = model.predict_generator(data_gen)
+
+        tf.keras.backend.clear_session()
+
 
         m4 = memory_profiler.memory_usage()
         mem_diff = m4[0] - m3[0]

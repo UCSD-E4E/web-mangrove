@@ -22,7 +22,7 @@ class DirectoryClient:
     '''
     Upload a single file to a path inside the container
     '''
-    print(f'Uploading {source} to {dest}')
+    # print(f'Uploading {source} to {dest}')
     # do i need this with open thing??? not too sure bc i never use the data var
     with open(source, 'rb') as data:
       self.client.create_blob_from_path(self.container_name, dest, source)
