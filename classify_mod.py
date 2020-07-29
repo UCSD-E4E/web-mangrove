@@ -81,6 +81,15 @@ def delete_files_in_dir(folder):
             print('Failed to delete %s. Reason: %s' % (file_path, e))
     return
 
+
+def download_model(client_model):
+    client_model.download_file('mvnmv4-merced/saved_model.pb', MAIN_DIRECTORY + 'mvnmv4-merced/')
+    client_model.download_file('mvnmv4-merced/variables/variables.data-00000-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
+    client_model.download_file('mvnmv4-merced/variables/variables.data-00001-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
+    client_model.download_file('mvnmv4-merced/variables/variables.index', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
+
+    return 
+
 def classify():
 
     output_container_name = 'output-files'
@@ -98,7 +107,7 @@ def classify():
 
     # download model from azure
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
-    client_model.download('mvnmv4-merced/', MAIN_DIRECTORY)
+    download_model(client_model)
 
     # load model
     model = MAIN_DIRECTORY + "mvnmv4-merced"
