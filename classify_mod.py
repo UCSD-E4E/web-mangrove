@@ -280,6 +280,8 @@ def classify():
     delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
     delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
 
+
+    time.sleep(20)
     # Delete the files in the blob containers 
     # remove files in output-files container
     try: 
