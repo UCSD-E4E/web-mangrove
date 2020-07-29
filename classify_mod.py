@@ -94,7 +94,7 @@ def classify():
 
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
-    list_of_files = list(client.ls_files('', recursive=False))
+    '''list_of_files = list(client.ls_files('', recursive=False))
     print("number of tif files in output-files: ", len(list_of_files))
     
     # generate batches of 32 and download the files 32 at a time
@@ -109,13 +109,14 @@ def classify():
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     download_model(client_model)
 
+    # load model
+    model = MAIN_DIRECTORY + "mvnmv4-merced"
+    model = load_model(model)
+    
 
     for n, batch in enumerate(batch_list):
 
         m1 = memory_profiler.memory_usage()
-        # load model
-        model = MAIN_DIRECTORY + "mvnmv4-merced"
-        model = load_model(model)
         
         # Download all tifs in the batch
         # Memory: 0.16015625
@@ -140,9 +141,9 @@ def classify():
         #predict probabilities from model for the batches
         # Memory: 50.3984375 Mb
         print('predict for batch', n)
-        predictions = model.predict_generator(data_gen)
+        predictions = model.predict(data_gen)
         tf.keras.backend.clear_session()
-        
+
         gc.collect()
 
         m4 = memory_profiler.memory_usage()
@@ -205,12 +206,13 @@ def classify():
         # gc.get_stats()
         gc.collect()
     
+    print('WAITING 10 seconds')
+    time.sleep(10)'''
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
     client.download(source='', dest=IMAGE_DIRECTORY+'/images')
     
-
-    # result_df = pd.read_csv('content.csv') # TEMP!
+    result_df = pd.read_csv('content.csv') # TEMP!
 
     dest_folders = []
     # Organize tiles into folders
