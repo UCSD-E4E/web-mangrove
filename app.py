@@ -1,4 +1,3 @@
-# from azure.storage.blob import PublicAccess , BlobServiceClient
 import azure_blob
 import string, random, requests
 import flash
@@ -23,13 +22,11 @@ import base64
 
 from rasterio.plot import show
 import matplotlib as mpl
-import geopandas
 import fiona
 
 import rasterio.features
 from geojson import Point, Feature, FeatureCollection, dump
 
-import geopandas
 
 from PIL import Image
 import PIL
@@ -65,7 +62,6 @@ UPLOAD_FOLDER = IMAGE_DIRECTORY + '/images/'
 ALLOWED_EXTENSIONS = {'zip', 'tif'}
 
 sys.path.append(MAIN_DIRECTORY)
-import gdal_merge as gm
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -88,14 +84,14 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-#function for fixing shapefiles to only create polygons around the the specified class
+'''#function for fixing shapefiles to only create polygons around the the specified class
 def fix_shp(filename):
     shp = geopandas.read_file(filename)
     for index, feature in tqdm(shp.iterrows()):
         if feature["DN"] == 0:
             shp.drop(index, inplace=True)
     shp.to_file(filename)
-    return shp
+    return shp'''
 
 def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
