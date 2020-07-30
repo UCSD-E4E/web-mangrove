@@ -22,7 +22,6 @@ import base64
 
 from rasterio.plot import show
 import matplotlib as mpl
-import fiona
 
 import rasterio.features
 from geojson import Point, Feature, FeatureCollection, dump
