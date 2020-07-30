@@ -251,7 +251,6 @@ def classify():
     print('ran !gdal_merge.py -o /content/1.tif /content/images/1/*')
 
     # TO DO: Put the next 3 blocks into functions
-
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
     # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
     gdal_merge_args = []
