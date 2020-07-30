@@ -25,7 +25,7 @@ memory-profiler==0.57.0
 OSGeo-Easy==0.0.1.dev16
 pandas==1.0.3
 Pillow==7.1.2
-pygdal==3.1.1.6
+# pygdal==3.1.1.6
 rasterio==1.1.5
 tensorflow-cpu==2.2.0
 tqdm==4.46.1
