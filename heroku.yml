@@ -1,0 +1,12 @@
+setup:
+  config:
+    BUILDPACK_URL: 'https://github.com/heroku/heroku-geo-buildpack.git'
+    GDAL_VERSION: 2.2.3
+build:
+  packages:
+    - gdal-bin
+  languages:
+    - 'https://github.com/heroku/heroku-geo-buildpack.git'
+    - python
+run:
+  web: 'gunicorn app:server --timeout 200'
