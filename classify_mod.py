@@ -270,6 +270,7 @@ def classify():
     os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
     print('ran gdal_polygonize')
 
+
     # store tif as jpg for visualization
     tif_to_jpg(MAIN_DIRECTORY + "1.tif")
     tif_to_jpg(MAIN_DIRECTORY + "0.tif")
