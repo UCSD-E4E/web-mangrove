@@ -116,7 +116,7 @@ def classify():
     model = load_model(model)
     
 
-    '''for n, batch in enumerate(batch_list):
+    for n, batch in enumerate(batch_list):
 
         m1 = memory_profiler.memory_usage()
         
@@ -209,7 +209,8 @@ def classify():
         gc.collect()
     
     print('WAITING 10 seconds')
-    time.sleep(10)'''
+    time.sleep(10)
+    print('finished waiting 10 seconds')
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
 
