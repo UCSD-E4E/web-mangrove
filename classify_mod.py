@@ -67,6 +67,8 @@ def get_batch_list(list_of_files, BATCH_SIZE):
     return batch_list
 
 def delete_files_in_dir(folder):
+    if not folder.endswith('/'):
+      folder += '/'
     if os.path.exists(folder):
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -294,8 +296,11 @@ def classify():
         print("error when deleting from blob storage")
     
     # delete model
-    delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
-    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables')
+    os.rmdir(MAIN_DIRECTORY+'mvnmv4-merced/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
+
+    # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
     print("classification finished")
     return
 
