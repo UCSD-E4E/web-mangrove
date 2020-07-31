@@ -67,34 +67,34 @@ def get_batch_list(list_of_files, BATCH_SIZE):
     return batch_list
 
 def delete_files_in_dir(folder):
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
+    if os.path.exists(folder):
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
 
-        try:
-            '''if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)'''
-            print('deleting: ' + file_path)
-            os.remove(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+            try:
+                '''if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)'''
+                print('deleting: ' + file_path)
+                os.remove(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
     return
 
-
+# input the azure client
 def download_model(client_model):
     client_model.download_file('mvnmv4-merced/saved_model.pb', MAIN_DIRECTORY + 'mvnmv4-merced/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00000-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00001-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.index', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
-
     return 
 
 def classify():
 
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
-    '''list_of_files = list(client.ls_files('', recursive=False))
+    list_of_files = list(client.ls_files('', recursive=False))
     print("number of tif files in output-files: ", len(list_of_files))
     
     # generate batches of 32 and download the files 32 at a time
@@ -114,7 +114,7 @@ def classify():
     model = load_model(model)
     
 
-    for n, batch in enumerate(batch_list):
+    '''for n, batch in enumerate(batch_list):
 
         m1 = memory_profiler.memory_usage()
         
@@ -249,12 +249,6 @@ def classify():
     
     raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
     print('created 1.tif')
-    
-    '''# concat to create complete list of args
-    command = "gdal_merge.py -o " + MAIN_DIRECTORY + "1.tif " + files_string
-    os.system(command)
-    print('ran !gdal_merge.py -o /content/1.tif /content/images/1/*')'''
-    
 
     # TO DO: Put the next 3 blocks into functions
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
@@ -269,12 +263,6 @@ def classify():
 
     raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
     print('created 0.tif')
-    
-
-    '''# concat to create complete list of args
-    command = "gdal_merge.py -o " + MAIN_DIRECTORY + "0.tif " + files_string
-    os.system(command)
-    print('ran !gdal_merge.py -o /content/0.tif /content/images/0/*')'''
 
     # create .shp files
     os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
@@ -310,6 +298,9 @@ def classify():
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables')
     print("classification finished")
     return
+
+
+
 '''
 
     # GENERATING PROBABILITY TILES
