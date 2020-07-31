@@ -243,27 +243,38 @@ def classify():
     nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
     nm_img_path = IMAGE_DIRECTORY + '/1/'
     nm_img_list = prepend(nm_img_list, nm_img_path)
+    print('nm_img_list:', nm_img_list)
 
     files_string = " ".join(nm_img_list)
-    # concat to create complete list of args
+    
+    raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
+    print('created 1.tif')
+    
+    '''# concat to create complete list of args
     command = "gdal_merge.py -o " + MAIN_DIRECTORY + "1.tif " + files_string
     os.system(command)
-    print('ran !gdal_merge.py -o /content/1.tif /content/images/1/*')
+    print('ran !gdal_merge.py -o /content/1.tif /content/images/1/*')'''
+    
 
     # TO DO: Put the next 3 blocks into functions
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
     # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
-    gdal_merge_args = []
-    gdal_merge_args = list(['-o', str(MAIN_DIRECTORY + '0.tif')])
+
     # list of non-mangrove tif
     m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
     m_img_path = IMAGE_DIRECTORY + '/0/'
     m_img_list = prepend(m_img_list, m_img_path)
     files_string = " ".join(m_img_list)
-    # concat to create complete list of args
+    print('m_img_list:', m_img_list)
+
+    raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
+    print('created 0.tif')
+    
+
+    '''# concat to create complete list of args
     command = "gdal_merge.py -o " + MAIN_DIRECTORY + "0.tif " + files_string
     os.system(command)
-    print('ran !gdal_merge.py -o /content/0.tif /content/images/0/*')
+    print('ran !gdal_merge.py -o /content/0.tif /content/images/0/*')'''
 
     # create .shp files
     os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
