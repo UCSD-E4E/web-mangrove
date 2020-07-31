@@ -155,6 +155,10 @@ def home():
 def index():
     return render_template('index.html')
 
+@server.route('/about')
+def about():
+    return render_template('about.html')
+
 # post so user can send login credentials to the login endpoint
 @server.route('/login', methods=['GET', 'POST'])
 def login():

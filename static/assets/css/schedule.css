@@ -1,0 +1,418 @@
+input[type="radio"], {
+    -webkit-appearance: radio;
+    cursor: pointer;
+    font-size:0.8em;
+    -ms-transform: scale(0.8); /* IE 9 */
+    -webkit-transform: scale(0.8); /* Chrome, Safari, Opera */
+    transform: scale(0.8);
+}
+input[type="checkbox"], {
+   -webkit-appearance: checkbox;
+   cursor: pointer;
+   font-size:0.8em;
+   -ms-transform: scale(0.8); /* IE 9 */
+    -webkit-transform: scale(0.8); /* Chrome, Safari, Opera */
+    transform: scale(0.8);
+}
+
+.reveal-if-activeSelf {
+  opacity: 0;
+  max-height: 0;
+  overflow: auto;
+}
+
+.reveal-if-activeGroup {
+  opacity: 0;
+  max-height: 0;
+  overflow: auto;
+}
+
+
+input[type="radio"]#self:checked ~ .reveal-if-activeSelf,
+input[type="radio"]#group:checked ~ .reveal-if-activeGroup {
+  opacity: 1;
+  max-height: 10em; /* little bit of a magic number :( */
+  overflow: visible;
+}
+
+input[type="radio"]#selfM:checked ~ .reveal-if-activeSelf,
+input[type="radio"]#groupM:checked ~ .reveal-if-activeGroup {
+  opacity: 1;
+  max-height: 10em; /* little bit of a magic number :( */
+  overflow: visible;
+}
+
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border:0.1em solid #ccc;
+  background-color: #f1f1f1;
+  padding:0.05em 0.7em 0.7em 0.6em;
+  width:100%;
+  position:relative;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tablinks {
+  background-color: inherit;
+  float: top;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.3em 0.65em 0.3em 0.65em;
+  transition: 0.3s;
+  margin:0.15em;
+  font-size:0.87em;
+  text-align:center;
+  display:inline-block;
+}
+
+/* Change background color of buttons on hover */
+.tab div:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab div.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  border: 0.1em solid #ccc;
+  border-top: none;
+  width: 100%;
+  overflow:auto;
+  margin-right:0px;
+  line-height: 1.2em
+
+}
+
+
+.g0 {
+
+}
+
+/* CSS FOR EACH OF THE DIFFERENT GROUPS */
+
+.g11 {
+  background-color: #008080;
+  text-align:center;
+  color: white;
+
+}
+
+
+.g1 {
+  background-color:#6a0dad;
+  text-align:center;
+  color:white;
+ 
+}
+
+
+.g4 {
+  background-color:#002366;
+  text-align:center;
+  color:white;
+}
+
+.g9 {
+  background-color: #2c7452;
+  text-align:center;
+  color:white;
+
+}
+
+.g8 {
+  background-color: green;
+  text-align:center;
+  color:white;
+
+}
+
+.g6 {
+  background-color: #0d98ba;
+  text-align:center;
+  color:white;
+}
+
+.g10 {
+  background-color: lightblue;
+  text-align:center;
+  color:white;
+}
+
+.g2 {
+  background-color: orange;
+  text-align:center;
+  color:white;
+}
+
+.g12 {
+  background-color: #9b1c31;
+  text-align:center;
+  color:white;
+}
+
+
+.hello {
+  background-color: #b76e79;
+  text-align:center;
+  color:white;
+
+}
+
+.g7 {
+  background-color: #FF1493;
+  text-align:center;
+  color:white;
+}
+
+.g3 {
+  background-color: crimson;
+  text-align:center;
+  color:white;
+}
+
+.g5{
+  background-color:#FFC0CB;
+  text-align:center;
+  color:white;
+}
+
+/* THE POP UP TO CONFIRM BOOKING TIME ETC */ 
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 1em 1.5em 0em 1.5em;
+  border: 0.1em solid #888;
+  width: 25%; /* Could be more or less, depending on screen size */
+  height:40%;
+  overflow:auto;
+  font-size:0.85em;
+  line-height:1.6em;
+}
+
+/* Modal Content/Box */
+.modal-content-error {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 0.7em 1.5em 0.5em 1.5em;
+  border: 0.1em solid #888;
+  width: 25%; /* Could be more or less, depending on screen size */
+  height: 27%;
+  font-size:0.9em;
+  overflow:auto;
+  line-height:1.6em;
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+#groupselect, #groupselectM {
+  padding:1em 2em 1.5em 2em;
+  background-color: #0d7746;
+  font-weight:400;
+  color:#fff;
+  overflow:hidden;
+  margin:1em 0em 1em 0em;
+  font-size:0.95em;
+  background-image: url(../../images/header.jpg);
+}
+
+
+.selectgroup {
+  padding-right:0.5em;
+  padding-left: 0.2em;
+  font-size:0.85em;
+}
+
+.ingroup {
+  padding-right:0.3em;
+  padding-left:1em;
+  word-wrap: break-word;
+}
+
+
+.grouplabel {
+  padding: 0em 0.4em 0em 0.5em;
+}
+
+#selfname, #selfnameM {
+  border-radius: 0.2em;
+  border: solid 1px #E5E5E5
+  line-height:0.5em;
+  display: inline-block;
+  border: 0;
+  background: #fafafa;
+  border: solid 1px #E5E5E5;
+  padding: 0em;
+  font-size:0.8em;
+}
+
+#netid {
+  font-size:1.2em;
+  padding:1em;
+}
+
+input[type="date"]::-webkit-inner-spin-button {
+  display: none;
+}
+
+input[type="date"]::-webkit-clear-button {
+  display:none;
+}
+input[type=date]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+.arrow {
+  content:'';
+  padding:0.3em;
+  border: solid #0d7746;
+  border-width: 0 0.6em 0.6em 0;
+  display: inline-block;
+  width:0.2em;
+  height:0.2em;
+  margin-top:3.6em;
+  cursor:pointer;
+  margin-left:3em;
+  margin-right:3em;
+}
+
+
+
+.next {
+ 
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.last{
+ 
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
+
+#backlast:hover {
+  border: solid #723875;
+  border-width: 0 0.6em 0.6em 0;
+  padding:0.3em;
+}
+
+#fornext:hover {
+  border: solid #723875;
+  border-width: 0 0.6em 0.6em 0;
+  padding:0.3em;
+}
+
+.next div:hover {
+  background-color: pink;
+}
+
+.last div:hover {
+  background-color: pink;
+}
+
+.boxarrow {
+  background-color:#fff;
+}
+
+.grayed {
+  background-color:lightgray;
+}
+
+.grayed:hover {
+  background-color: lightgray !important;
+  cursor:default !important;
+}
+
+.select {
+   -webkit-appearance: checkbox;
+   cursor: pointer;
+}
+
+
+#logoutButton {
+  border: 3em solid;
+  background-color: #2c7452;
+  border-radius:0.2em !important;
+  cursor:pointer;
+}
+
+select::-ms-expand { 
+  display: block !important; 
+}
+
+
+#pgup {
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    background: #0d7746;
+    width: 3em;
+    height: 3em;
+    display: block;
+    text-decoration: none;
+    -webkit-border-radius: 5em;
+    -moz-border-radius: 5em;
+    border-radius: 5em;
+    display: none;
+    -webkit-transition: all 0.3s linear;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    z-index: 99;
+}
+#pgup i {
+    color: #fff;
+    margin: 0;
+    position: relative;
+    left: 0.85em;
+    top: 0.5em;
+    font-size: 1.1em;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    z-index: 99;
+}
+#pgup:hover {
+   background: #53bb8b;
+}
+#pgup:hover i {
+    color: #fff;
+    top: 0.2em;
+}

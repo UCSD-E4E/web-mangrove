@@ -2,23 +2,36 @@
 <html>
    <head>
      <title>Mangrove Classification </title>
-     <link rel="stylesheet" type="text/css" href="../static/assets/css/main.css"/>
-     <script type="text/javascript" src="../static/assets/js/main.js"></script>
-     <meta name="viewport" content="width=device-width,
-        initial-scale=1">
-      
      <link rel="stylesheet" href=
 "https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-   </head>
+     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/main.css') }}"/>
+     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/schedule.css') }}"/>
+     <link rel="stylesheet" type="text/javascript" href="{{ url_for('static', filename='/assets/js/main.js') }}"/>
+     <meta name="viewport" content="width=device-width,
+        initial-scale=1">
+  </head>
+   
 
-   <body>
-      <div class="container bg-success">
-          <br>
-         <center>
-            <h1 class="hidden-xs">Mangrove Classification Application</h1>
-        </center>
-         <br>
-      </div>
+	<body class="homepage is-preload">
+		<div id="page-wrapper">
+			<!-- Header -->
+				<div id="header">
+					<!-- Inner -->
+						<div class="inner">
+							<header>
+								<h1>Mangrove  Image Classification</h1>
+							</header>
+							<footer>
+								<a href=""><div href = "schedule" class="button circled scrolly"><span style="font-size:0.8em;">Classify</span></div></a>
+							</footer>
+						</div>
+								<!-- Nav -->
+                  {% include 'nav.html' %}
+				</div>
+
+				{% include 'scroll.html' %}
+				
+		</div>
       
       <br>
       <!-- {% if summary %}
@@ -127,7 +140,7 @@
             <h4> Class Probabilities </h4>           
         </div>
       </div>
-
+<br>
       <div class="container">
          <div class="row">
             <div class="col-sm-12">

@@ -1,0 +1,26 @@
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/main.css') }}"/>
+     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/schedule.css') }}"/>
+  <script type="application/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        
+
+        <a id="pgup" href="#nav" class="scrolly"><i class="icon-chevron-up"></i></a>					
+
+        <script>
+
+            $('li').hover(function (event) {
+                $(event.target).addClass('active');
+            }, function (event) {
+                $(event.target).removeClass('active');
+            })
+
+            // ===== Scroll to Top ==== 
+            $(window).scroll(function() {
+                if ($(this).scrollTop() >= 50) {        // If page is scrolled more than 50px
+                    $('#pgup').fadeIn(200);    // Fade in the arrow
+                } else {
+                    $('#pgup').fadeOut(200);   // Else fade out the arrow
+                }
+            });
+    
+        </script>
