@@ -7,7 +7,7 @@ import numpy as np
 import raster
 from PIL import Image
 
-import memory_profiler
+import shutil
 
 import PIL
 import math
@@ -118,16 +118,13 @@ def classify():
 
     '''for n, batch in enumerate(batch_list):
 
-        m1 = memory_profiler.memory_usage()
         
         # Download all tifs in the batch
         # Memory: 0.16015625
         for i in range(len(batch)):
             client.download_file(batch[i], str(MAIN_DIRECTORY + "images/images/"))
             
-        m2 = memory_profiler.memory_usage()
-        mem_diff = m2[0] - m1[0]
-        print(f"It took {mem_diff} Mb to execute this method")
+
 
         #Read images using keras and split into batches
         # Memory: 0
@@ -136,9 +133,7 @@ def classify():
                                                             batch_size=32,
                                                             shuffle=False,
                                                             target_size=(256, 256))
-        m3 = memory_profiler.memory_usage()
-        mem_diff = m3[0] - m2[0]
-        print(f"It took {mem_diff} Mb to execute this method")
+
 
         #predict probabilities from model for the batches
         # Memory: 50.3984375 Mb
@@ -148,9 +143,6 @@ def classify():
 
         gc.collect()
 
-        m4 = memory_profiler.memory_usage()
-        mem_diff = m4[0] - m3[0]
-        print(f"It took {mem_diff} Mb to execute this method")
 
 
         #associate filenames and classification for each prediction
@@ -165,10 +157,8 @@ def classify():
             
             #getting final class prediction
             result_df.loc[idx,"prediction"] = np.argmax(prediction)
+            
 
-        m5 = memory_profiler.memory_usage()
-        mem_diff = m5[0] - m4[0]
-        print(f"It took {mem_diff} Mb to execute this method")
 
         # DOWNSAMPLE ALL THE IMAGES
         # Memory: 3.43Mb
@@ -179,10 +169,6 @@ def classify():
             img, _ = raster.load_image(FILENAME)
             _, _ = raster.downsample_raster(img, ds_factor, FILENAME)
 
-        m6 = memory_profiler.memory_usage()
-        mem_diff = m6[0] - m5[0]
-        print(f"It took {mem_diff} Mb to execute this method")
-
 
         # REUPLOAD DOWNSAMPLE TIFS TO DATABASE
         # memory: 0Mb
@@ -192,28 +178,21 @@ def classify():
             client.upload_file(FILENAME, rel_filename)
         
 
-        m7 = memory_profiler.memory_usage()
-        mem_diff = m7[0] - m6[0]
-        print(f"It took {mem_diff} Mb to execute this method")
-
 
         # DELETE ALL TIFS IN images/images to prepare for the next batch 
         # Memory: 54.1953125 Mb 
         print('deleting images in folder')
         delete_files_in_dir(UPLOAD_FOLDER)
-        m8 = memory_profiler.memory_usage()
-        mem_diff = m8[0] - m1[0]
-        print(f"It took {mem_diff} Mb to execute this method")
         
         # gc.get_stats()
         gc.collect()
     
-    print('WAITING 10 seconds')
-    time.sleep(10)
-    print('finished waiting 10 seconds')'''
+    print('WAITING 20 seconds')
+    time.sleep(20)
+    print('finished waiting 20 seconds')
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
-
+    '''
     blobs = client.ls_files(path='')
     for blob in blobs: 
         client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
@@ -297,13 +276,15 @@ def classify():
         print("error when deleting from blob storage")
     
     # delete model
-    os.rmdir(MAIN_DIRECTORY+'mvnmv4-merced/')
+
+    shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
 
     # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
     print("classification finished")
     return
+
 
 '''
 
