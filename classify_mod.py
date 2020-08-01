@@ -106,17 +106,17 @@ def classify():
     #Set up dataframe that will hold classifications
     column_names = ["prediction","p_0","p_1","filename"]
     result_df = pd.DataFrame(columns=column_names)
-
+    '''
     # download model from azure
     client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     download_model(client_model)
-
+    
     # load model
     model = MAIN_DIRECTORY + "mvnmv4-merced"
     model = load_model(model)
     
 
-    '''for n, batch in enumerate(batch_list):
+    for n, batch in enumerate(batch_list):
 
         
         # Download all tifs in the batch
@@ -192,14 +192,14 @@ def classify():
     print('finished waiting 20 seconds')
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
-    '''
+    
 
     shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
 
     # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
-
+    '''
     gc.collect()
 
     blobs = client.ls_files(path='')
