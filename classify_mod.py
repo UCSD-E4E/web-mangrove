@@ -193,6 +193,15 @@ def classify():
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
     '''
+
+    shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
+
+    # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
+
+    gc.collect()
+
     blobs = client.ls_files(path='')
     for blob in blobs: 
         client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
@@ -277,11 +286,6 @@ def classify():
     
     # delete model
 
-    shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
-    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
-
-    # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
-    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
     print("classification finished")
     return
 
