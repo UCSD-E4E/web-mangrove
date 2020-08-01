@@ -78,7 +78,7 @@ def delete_files_in_dir(folder):
                     os.unlink(file_path)
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)'''
-                print('deleting: ' + file_path)
+                # print('deleting: ' + file_path)
                 os.remove(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
@@ -106,9 +106,9 @@ def classify():
     #Set up dataframe that will hold classifications
     column_names = ["prediction","p_0","p_1","filename"]
     result_df = pd.DataFrame(columns=column_names)
-    '''
+    
     # download model from azure
-    client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
+    '''client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     download_model(client_model)
     
     # load model
@@ -199,8 +199,9 @@ def classify():
 
     # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
-    '''
+    
     gc.collect()
+    '''
 
     blobs = client.ls_files(path='')
     for blob in blobs: 
@@ -272,7 +273,7 @@ def classify():
 
     # Delete the files in the blob containers 
     # remove files in output-files container
-    try: 
+    '''try: 
         client.rmdir('')
     except: 
         print("error when deleting from blob storage")
@@ -282,7 +283,7 @@ def classify():
     try: 
         client.rmdir('')
     except: 
-        print("error when deleting from blob storage")
+        print("error when deleting from blob storage")'''
     
     # delete model
 

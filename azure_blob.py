@@ -50,7 +50,7 @@ class DirectoryClient:
       blobs = [source + blob for blob in blobs]
       for blob in blobs:
         blob_dest = dest + os.path.relpath(blob, source)
-        print("\nDownloading blob to " + blob_dest)
+        # print("\nDownloading blob to " + blob_dest)
         self.client.get_blob_to_path(self.container_name, blob, blob_dest)
     else:
       self.client.get_blob_to_path(self.container_name, source, dest)
@@ -64,7 +64,7 @@ class DirectoryClient:
       dest += '/'
     blob_dest = dest + os.path.basename(source) if dest.endswith('/') else dest
 
-    print( f'Downloading {source} to {blob_dest}')
+    # print( f'Downloading {source} to {blob_dest}')
     os.makedirs(os.path.dirname(blob_dest), exist_ok=True)
     self.client.get_blob_to_path(self.container_name, source, blob_dest)
     '''data = bc.download_blob()
