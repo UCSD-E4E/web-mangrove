@@ -328,3 +328,11 @@ def classify():
     print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*')
 '''
 
+
+
+
+
+
+
+print('hi')
+
