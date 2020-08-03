@@ -78,8 +78,7 @@ CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifi
 from celery import Celery
 
 def make_celery(app):
-    celery = Celery(server.name, broker=server.config['CELERY_BROKER_URL'], 
-            backend=server.config['CELERY_RESULT_BACKEND'])
+    celery = Celery(server.name, broker=server.config['CELERY_BROKER_URL'])
     celery.conf.update(server.config)
 
     TaskBase = celery.Task
@@ -91,8 +90,10 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
-server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
+# server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
+
+server.config['CELERY_BROKER_URL'] = 'redis://h:pb2bfc095a54282dafcd0a69dbd48562726bf133eb775122633cd320211f73c12@ec2-3-224-237-146.compute-1.amazonaws.com:18009'
+# server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
 celery = make_celery(server)
 
 
