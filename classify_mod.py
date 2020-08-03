@@ -115,9 +115,7 @@ def classify():
     model = MAIN_DIRECTORY + "mvnmv4-merced"
     model = load_model(model)
     
-
     for n, batch in enumerate(batch_list):
-
         
         # Download all tifs in the batch
         # Memory: 0.16015625
