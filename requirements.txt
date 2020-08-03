@@ -7,6 +7,7 @@ azure-storage==0.20.0
 azure-storage-blob==2.1.0
 azure-storage-common==2.1.0
 azure-storage-nspkg==3.1.0
+celery==4.4.7
 dash==1.13.4
 dash-core-components==1.10.1
 dash-html-components==1.0.3
@@ -27,6 +28,8 @@ pandas==1.0.3
 Pillow==7.1.2
 #pygdal==3.1.1.6
 rasterio==1.1.5
+redis==3.5.3
+rq==1.5.0
 tensorflow-cpu==2.2.0
 tqdm==4.46.1
 Werkzeug==1.0.0

@@ -2,6 +2,8 @@ import azure_blob
 import string, random, requests
 import flash
 
+from celery import Celery
+
 import os
 from os import path
 import json
@@ -73,9 +75,25 @@ server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
 
+from celery import Celery
 
-# unzip model zip file
-# os.system("unzip -n " + MODEL_PATH)
+def make_celery(app):
+    celery = Celery(server.name, broker=server.config['CELERY_BROKER_URL'], 
+            backend=server.config['CELERY_RESULT_BACKEND'])
+    celery.conf.update(server.config)
+
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
+server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
+server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
+celery = make_celery(server)
 
 
 # check for allowed file extension
@@ -286,11 +304,17 @@ def unzip():
     return response
 '''
 
+@celery.task()
+def classify_celery():
+    print('this CELERY IS RUNNING')
+    classify_mod.classify()
+    return
+
 
 @server.route('/classify', methods=['GET'])
 def classify():
     
-    classify_mod.classify()
+    classify_celery.apply_async()
     html = render_template('index.html')
     response = make_response(html)
     return response

@@ -108,7 +108,7 @@ def classify():
     result_df = pd.DataFrame(columns=column_names)
     
     # download model from azure
-    '''client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
+    client_model = azure_blob.DirectoryClient(CONNECTION_STRING, MODEL_CONTAINER_NAME)
     download_model(client_model)
     
     # load model
@@ -201,7 +201,6 @@ def classify():
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
     
     gc.collect()
-    '''
 
     blobs = client.ls_files(path='')
     for blob in blobs: 
@@ -273,7 +272,7 @@ def classify():
 
     # Delete the files in the blob containers 
     # remove files in output-files container
-    '''try: 
+    try: 
         client.rmdir('')
     except: 
         print("error when deleting from blob storage")
@@ -283,7 +282,7 @@ def classify():
     try: 
         client.rmdir('')
     except: 
-        print("error when deleting from blob storage")'''
+        print("error when deleting from blob storage")
     
     # delete model
 
@@ -327,12 +326,3 @@ def classify():
     os.system(command)
     print('ran !gdal_merge.py -o /content/p.tif /content/images/images/*')
 '''
-
-
-
-
-
-
-
-print('hi')
-
