@@ -6,8 +6,11 @@ import pandas as pd
 import numpy as np
 import raster
 from PIL import Image
+import time
+from flask import jsonify
 
 import shutil
+import requests
 
 import PIL
 import math
@@ -66,7 +69,7 @@ def get_batch_list(list_of_files, BATCH_SIZE):
     batch_list = [list_of_files[x - y: x] for x, y in zip(accumulate(length_to_split), length_to_split)]
     return batch_list
 
-def delete_files_in_dir(folder):
+'''def delete_files_in_dir(folder):
     if not folder.endswith('/'):
       folder += '/'
     if os.path.exists(folder):
@@ -74,32 +77,42 @@ def delete_files_in_dir(folder):
             file_path = os.path.join(folder, filename)
 
             try:
-                '''if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)'''
                 # print('deleting: ' + file_path)
                 os.remove(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
-    return
+    return'''
 
 # input the azure client
-def download_model(client_model):
+'''def download_model(client_model):
     client_model.download_file('mvnmv4-merced/saved_model.pb', MAIN_DIRECTORY + 'mvnmv4-merced/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00000-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00001-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.index', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     return 
-
+'''
 def classify():
 
+    # msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify?img=https://raw.githubusercontent.com/Azure-Samples/functions-python-tensorflow-tutorial/master/resources/assets/samples/cat1.png')
+    msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify')
+
+    # print(msg_get)
+    json = msg.json()
+
+    print('json 1st row: ', json[0])
+
+    result_df = pd.DataFrame.from_records(json)
+    print(result_df.head())
+
+    print('sleeping for 30 seconds')
+    time.sleep(30)
+    
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
-    list_of_files = list(client.ls_files('', recursive=False))
-    print("number of tif files in output-files: ", len(list_of_files))
+    '''list_of_files = list(client.ls_files('', recursive=False))
+    print("number of tif files in output-files: ", len(list_of_files))'''
     
-    # generate batches of 32 and download the files 32 at a time
+    '''# generate batches of 32 and download the files 32 at a time
     BATCH_SIZE = 32
     batch_list = get_batch_list(list_of_files, BATCH_SIZE)
 
@@ -183,20 +196,20 @@ def classify():
         delete_files_in_dir(UPLOAD_FOLDER)
         
         # gc.get_stats()
-        gc.collect()
+        gc.collect() '''
     
-    print('WAITING 20 seconds')
+    '''print('WAITING 20 seconds')
     time.sleep(20)
-    print('finished waiting 20 seconds')
+    print('finished waiting 20 seconds')'''
     # DOWNLOAD ALL files in output blob in the hash folder 
     # to fix this issue, ask the user for the prefix of their files? idk...
     
 
-    shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
+    '''shutil.rmtree(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/')
 
     # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
-    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')
+    os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')'''
     
     gc.collect()
 
@@ -204,7 +217,7 @@ def classify():
     for blob in blobs: 
         client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
     
-    result_df = pd.read_csv('content.csv') # TEMP!
+    # result_df = pd.read_csv('content.csv') # TEMP!
 
     dest_folders = []
     # Organize tiles into folders

@@ -90,10 +90,10 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-# server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
+server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
 
-server.config['CELERY_BROKER_URL'] = 'redis://h:pb2bfc095a54282dafcd0a69dbd48562726bf133eb775122633cd320211f73c12@ec2-3-224-237-146.compute-1.amazonaws.com:18009'
-# server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
+# server.config['CELERY_BROKER_URL'] = 'redis://h:pb2bfc095a54282dafcd0a69dbd48562726bf133eb775122633cd320211f73c12@ec2-3-224-237-146.compute-1.amazonaws.com:18009'
+server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
 celery = make_celery(server)
 
 
@@ -309,13 +309,16 @@ def unzip():
 def classify_celery():
     print('this CELERY IS RUNNING')
     classify_mod.classify()
-    return
+    return msg
 
 
 @server.route('/classify', methods=['GET'])
 def classify():
+    print('in classify')
     
-    classify_celery.apply_async()
+    # msg = classify_celery.apply_async()
+    classify_mod.classify()
+    # print(msg)
     html = render_template('index.html')
     response = make_response(html)
     return response
@@ -438,7 +441,7 @@ def start_dash():
     if mngrv_geojson != None and n_mngrv_geojson != None:
         dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
 
-        app.layout = html.Div([html.Button('View My Classification', id='view-mine', n_clicks=0), 
+        app.layout = html.Div([html.Button('Update', id='view-mine', n_clicks=0), 
             dcc.Checklist(id='radiobtn', 
             options=[
                 {'label': 'Mangrove', 'value': 'mangrove'},
