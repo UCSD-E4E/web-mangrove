@@ -356,12 +356,19 @@ def classify_celery():
     classify_mod.classify()
     return 
 
+@server.route('/prep_classification', methods=['GET'])
+def prep_classification():
+    classify_mod.post_classify()
+    html = render_template('index.html')
+    response = make_response(html)
+    return response
 
 @server.route('/classify', methods=['GET'])
 def classify():
     print('in classify')
     
     classify_celery.apply_async()
+
     # classify_mod.classify()
     html = render_template('index.html')
     response = make_response(html)

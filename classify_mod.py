@@ -104,7 +104,7 @@ def download_result_df():
 def save_result_df(filename):
     PRED_CONTAINER_NAME = 'prediction-results'
     client_pred = azure_blob.DirectoryClient(CONNECTION_STRING, PRED_CONTAINER_NAME)
-    client_pred.upload_file(filename, MAIN_DIRECTORY+filename)
+    client_pred.upload_file(filename, filename)
     return
 
 
