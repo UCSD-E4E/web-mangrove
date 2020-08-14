@@ -297,7 +297,7 @@ def createZip(zip_name, filelist, delete=False):
     for filename in filelist:
         if os.path.exists(filename):
             existing_filelist.append(filename)
-            
+
     with ZipFile(zip_name, 'w') as zipObj:
         # Add multiple files to the zip
         for filename in existing_filelist:
@@ -377,6 +377,12 @@ def require_login():
 
 def get_fig(version, mngrv_geojson, n_mngrv_geojson):
 
+    if mngrv_geojson == None:
+        mngrv_geojson = {'features': []}
+    if n_mngrv_geojson == None:
+        n_mngrv_geojson = {'features': []}
+
+    
     image_filename = "image_m_green.png"
     if not path.exists(image_filename):
         image_filename = "image_m_green-perm.png"
