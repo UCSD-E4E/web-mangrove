@@ -292,9 +292,15 @@ def visualization():
 # file list contains all the file going into the zip
 # delete is an option boolean that determines ifyou should delete the files or not
 def createZip(zip_name, filelist, delete=False):
+    
+    existing_filelist = []
+    for filename in filelist:
+        if os.path.exists(filename):
+            existing_filelist.append(filename)
+            
     with ZipFile(zip_name, 'w') as zipObj:
         # Add multiple files to the zip
-        for filename in filelist:
+        for filename in existing_filelist:
             zipObj.write(filename)
     if delete: 
         for filename in filelist:
