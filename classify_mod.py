@@ -382,6 +382,14 @@ def classify():
         os.rename(src, dest)
     print('organized into folders')
 
+    nonmangrove_exists = False
+    mangrove_exists = False
+    if (os.path.isdir(IMAGE_DIRECTORY + '/1/')):
+        nonmangrove_exists = True
+    
+    if (os.path.isdir(IMAGE_DIRECTORY + '/0/')):
+        mangrove_exists = True
+
     # rename all the file to have .tif extension
     '''nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
     nm_img_path = IMAGE_DIRECTORY + '/1/'
@@ -402,37 +410,34 @@ def classify():
     # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
 
     # KEEP THIS
-    nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
-    nm_img_path = IMAGE_DIRECTORY + '/1/'
-    nm_img_list = prepend(nm_img_list, nm_img_path)
+    if nonmangrove_exists: 
+        nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
+        nm_img_path = IMAGE_DIRECTORY + '/1/'
+        nm_img_list = prepend(nm_img_list, nm_img_path)
 
-    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
-    m_img_path = IMAGE_DIRECTORY + '/0/'
-    m_img_list = prepend(m_img_list, m_img_path)
+        raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
+        print('created 1.tif')
+        os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
+        tif_to_jpg(MAIN_DIRECTORY + "1.tif")
+        delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
+
+
+    if mangrove_exists: 
+        m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+        m_img_path = IMAGE_DIRECTORY + '/0/'
+        m_img_list = prepend(m_img_list, m_img_path)
+
+        raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
+        print('created 0.tif')
+        os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
+
+        # store tif as jpg for visualization
+        tif_to_jpg(MAIN_DIRECTORY + "0.tif")
+        # Delete files in images/images
+        delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
+
     
-    raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
-    print('created 1.tif')
-
-    # TO DO: Put the next 3 blocks into functions
-    # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
-    # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
-
-    raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
-    print('created 0.tif')
-
-    # create .shp files
-    os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
-    os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
-    print('ran gdal_polygonize')
-
-
-    # store tif as jpg for visualization
-    tif_to_jpg(MAIN_DIRECTORY + "1.tif")
-    tif_to_jpg(MAIN_DIRECTORY + "0.tif")
-
-    # Delete files in images/images
-    delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
-    delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
+    
     delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
 
     # Delete the files in the blob containers 

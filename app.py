@@ -93,12 +93,9 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
-
-# server.config['CELERY_BROKER_URL'] = 'redis://h:pb2bfc095a54282dafcd0a69dbd48562726bf133eb775122633cd320211f73c12@ec2-3-224-237-146.compute-1.amazonaws.com:18009'
-server.config['CELERY_RESULT_BACKEND'] = 'redis://127.0.0.1:6379/0'
+# server.config['CELERY_BROKER_URL'] = 'redis://127.0.0.1:6379/0'
+server.config['CELERY_BROKER_URL'] = 'redis://h:pb2bfc095a54282dafcd0a69dbd48562726bf133eb775122633cd320211f73c12@ec2-3-224-237-146.compute-1.amazonaws.com:18009'
 celery = make_celery(server)
-
 
 # check for allowed file extension
 def allowed_file(filename):
@@ -267,10 +264,11 @@ def upload():
         # if user does not select file, browser also
         # submit an empty part without filename
         if file.filename == '':
-            flash('No selected file')
-            print('No Selected file')
+            html = render_template('index.html')
+            response = make_response(html)
+            return response
             
-        if file and allowed_file(file.filename):
+        elif file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             print('filename:', filename)
             input_container = 'input-files'
@@ -357,8 +355,8 @@ def classify_celery():
 def classify():
     print('in classify')
     
-    # classify_celery.apply_async()
-    classify_mod.classify()
+    classify_celery.apply_async()
+    # classify_mod.classify()
     html = render_template('index.html')
     response = make_response(html)
     return response
