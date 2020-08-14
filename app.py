@@ -526,13 +526,16 @@ def update_figure(n_clicks, version):
 
     # if you click the view my classification button, render the classfication
     if (int(n_clicks)> 0):
+        print('directory: ', os.listdir())
         # open the tif image and create geojson file
         FILENAME = '0.tif'
         final_filename = 'mngrv.geojson'
-        if path.exists(final_filename):
+        if path.exists(final_filename) and path.exists(FILENAME):
+            print("'mngrv.geojson' exists")
             with open(final_filename) as f:
                 mngrv_geojson = json.load(f)
         else:
+            print("'mngrv.geojson' does not exist yet")
             mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
 
         # open the tif image and create geojson file

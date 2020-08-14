@@ -52,7 +52,7 @@ def get_colorscale(sm, df, cmin, cmax):
 # create dictionary that plotly uses to draw the shape border
 def make_sources(geojson):
     sources = []
-    geojson_copy = copy.deepcopy(geojson['features']) # do not oeverwrite the original file
+    geojson_copy = copy.deepcopy(geojson['features']) # do not overwrite the original file
 
     for feature in geojson_copy:
         sources.append(dict(type = 'FeatureCollection',
