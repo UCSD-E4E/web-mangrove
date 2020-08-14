@@ -95,6 +95,132 @@ def download_model(client_model):
     client_model.download_file('mvnmv4-merced/variables/variables.index', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     return 
 
+def download_result_df():
+    PRED_CONTAINER_NAME = 'prediction-results'
+    client_pred = azure_blob.DirectoryClient(CONNECTION_STRING, PRED_CONTAINER_NAME)
+    client_pred.download_file('content.csv', MAIN_DIRECTORY)
+    return
+
+def save_result_df(filename):
+    PRED_CONTAINER_NAME = 'prediction-results'
+    client_pred = azure_blob.DirectoryClient(CONNECTION_STRING, PRED_CONTAINER_NAME)
+    client_pred.upload_file(filename, MAIN_DIRECTORY+filename)
+    return
+
+
+def post_classify():
+
+    download_result_df()
+
+    output_container_name = 'output-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
+
+    # KEEP THIS 
+    gc.collect()
+
+    blobs = client.ls_files(path='')
+    for blob in blobs: 
+        client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
+    
+    result_df = pd.read_csv('content.csv')
+
+    # KEEP THIS
+    dest_folders = []
+    # Organize tiles into folders
+    for index, row in tqdm(result_df.iterrows()):
+        cur_file = UPLOAD_FOLDER + row['filename']
+        # cur_file = cur_file.replace("jpg","tif",2)
+        classification = row['prediction'] 
+
+        #set destination folder, and creates the folder if it doesn't exist
+        dest_folder = os.path.join(os.path.abspath(IMAGE_DIRECTORY),str(classification))
+        dest_folders.append(dest_folder)
+        if os.path.exists(dest_folder) == False:
+            os.mkdir(dest_folder)
+        dest = os.path.join(dest_folder,os.path.basename(cur_file))
+    
+        #moves file
+        src = cur_file
+        os.rename(src, dest)
+    print('organized into folders')
+
+    nonmangrove_exists = False
+    mangrove_exists = False
+    if (os.path.isdir(IMAGE_DIRECTORY + '/1/')):
+        nonmangrove_exists = True
+    
+    if (os.path.isdir(IMAGE_DIRECTORY + '/0/')):
+        mangrove_exists = True
+
+    # rename all the file to have .tif extension
+    '''nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
+    nm_img_path = IMAGE_DIRECTORY + '/1/'
+    nm_img_list = prepend(nm_img_list, nm_img_path)
+    for nm_img in nm_img_list: 
+        os.rename(nm_img, nm_img+'.tif')
+
+    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+    # list of non-mangrove tif
+    m_img_path = IMAGE_DIRECTORY + '/0/'
+    m_img_list = prepend(m_img_list, m_img_path)
+    for m_img in m_img_list: 
+        os.rename(m_img, m_img+'.tif')'''
+
+    # recombine classified tiles for each class
+
+    # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
+    # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
+
+    # KEEP THIS
+    if nonmangrove_exists: 
+        nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
+        nm_img_path = IMAGE_DIRECTORY + '/1/'
+        nm_img_list = prepend(nm_img_list, nm_img_path)
+
+        raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
+        print('created 1.tif')
+        os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
+        tif_to_jpg(MAIN_DIRECTORY + "1.tif")
+        delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
+
+
+    if mangrove_exists: 
+        m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+        m_img_path = IMAGE_DIRECTORY + '/0/'
+        m_img_list = prepend(m_img_list, m_img_path)
+
+        raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
+        print('created 0.tif')
+        os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
+
+        # store tif as jpg for visualization
+        tif_to_jpg(MAIN_DIRECTORY + "0.tif")
+        # Delete files in images/images
+        delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
+
+    
+    
+    delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
+
+    # Delete the files in the blob containers 
+    # remove files in output-files container
+    try: 
+        client.rmdir('')
+    except: 
+        print("error when deleting from blob storage")
+    # remove files in input-files container
+    input_container_name = 'input-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container_name)
+    try: 
+        client.rmdir('')
+    except: 
+        print("error when deleting from blob storage")
+    
+    # delete model
+
+    print("classification finished")
+    return
+
 def classify():
 
     '''url = 'https://mangroveclassifier.blob.core.windows.net/output-files/'
@@ -221,6 +347,11 @@ def classify():
     result_df = pd.DataFrame.from_records(json_msg_final)
     print(result_df.head())
 
+    result_df.to_csv(r'content.csv')
+
+    filename_result_df = 'content.csv'
+    save_result_df(filename_result_df)
+
     for n, batch in enumerate(batch_list):
         # Download all tifs in the batch
         # Memory: 0.16015625
@@ -250,6 +381,7 @@ def classify():
         
         # gc.get_stats()
         gc.collect()
+    return 
     '''
     
     # generate batches of 32 and download the files 32 at a time
@@ -353,112 +485,7 @@ def classify():
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')'''
     
 
-    # KEEP THIS 
-    gc.collect()
-
-    blobs = client.ls_files(path='')
-    for blob in blobs: 
-        client.download_file(source=blob, dest=IMAGE_DIRECTORY+'/images/')
     
-    # result_df = pd.read_csv('content.csv') # TEMP!
-
-    # KEEP THIS
-    dest_folders = []
-    # Organize tiles into folders
-    for index, row in tqdm(result_df.iterrows()):
-        cur_file = UPLOAD_FOLDER + row['filename']
-        # cur_file = cur_file.replace("jpg","tif",2)
-        classification = row['prediction'] 
-
-        #set destination folder, and creates the folder if it doesn't exist
-        dest_folder = os.path.join(os.path.abspath(IMAGE_DIRECTORY),str(classification))
-        dest_folders.append(dest_folder)
-        if os.path.exists(dest_folder) == False:
-            os.mkdir(dest_folder)
-        dest = os.path.join(dest_folder,os.path.basename(cur_file))
-    
-        #moves file
-        src = cur_file
-        os.rename(src, dest)
-    print('organized into folders')
-
-    nonmangrove_exists = False
-    mangrove_exists = False
-    if (os.path.isdir(IMAGE_DIRECTORY + '/1/')):
-        nonmangrove_exists = True
-    
-    if (os.path.isdir(IMAGE_DIRECTORY + '/0/')):
-        mangrove_exists = True
-
-    # rename all the file to have .tif extension
-    '''nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
-    nm_img_path = IMAGE_DIRECTORY + '/1/'
-    nm_img_list = prepend(nm_img_list, nm_img_path)
-    for nm_img in nm_img_list: 
-        os.rename(nm_img, nm_img+'.tif')
-
-    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
-    # list of non-mangrove tif
-    m_img_path = IMAGE_DIRECTORY + '/0/'
-    m_img_list = prepend(m_img_list, m_img_path)
-    for m_img in m_img_list: 
-        os.rename(m_img, m_img+'.tif')'''
-
-    # recombine classified tiles for each class
-
-    # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
-    # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
-
-    # KEEP THIS
-    if nonmangrove_exists: 
-        nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
-        nm_img_path = IMAGE_DIRECTORY + '/1/'
-        nm_img_list = prepend(nm_img_list, nm_img_path)
-
-        raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
-        print('created 1.tif')
-        os.system('gdal_polygonize.py 1.tif -f "ESRI Shapefile" -b 4 1.shp')
-        tif_to_jpg(MAIN_DIRECTORY + "1.tif")
-        delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
-
-
-    if mangrove_exists: 
-        m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
-        m_img_path = IMAGE_DIRECTORY + '/0/'
-        m_img_list = prepend(m_img_list, m_img_path)
-
-        raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
-        print('created 0.tif')
-        os.system('gdal_polygonize.py 0.tif -f "ESRI Shapefile" -b 4 0.shp')
-
-        # store tif as jpg for visualization
-        tif_to_jpg(MAIN_DIRECTORY + "0.tif")
-        # Delete files in images/images
-        delete_files_in_dir(IMAGE_DIRECTORY+'/0/')
-
-    
-    
-    delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
-
-    # Delete the files in the blob containers 
-    # remove files in output-files container
-    try: 
-        client.rmdir('')
-    except: 
-        print("error when deleting from blob storage")
-    # remove files in input-files container
-    input_container_name = 'input-files'
-    client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container_name)
-    try: 
-        client.rmdir('')
-    except: 
-        print("error when deleting from blob storage")
-    
-    # delete model
-
-    print("classification finished")
-    return
-
 '''
     # GENERATING PROBABILITY TILES
     for index, sample in tqdm(result_df.iterrows()):
