@@ -28,6 +28,7 @@ def merge_raster(input_files, output_file):
     images = []
     #get files from file list and load the rasters
     for file in input_files:
+        print('file: ' + file)
         image, meta = load_image(file)
         images.append(image)
 

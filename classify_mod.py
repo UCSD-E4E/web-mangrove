@@ -1,11 +1,14 @@
 import os, shutil
 import sys
+import itertools
 from tqdm.autonotebook import tqdm
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import json
 import raster
 from PIL import Image
+from urllib.request import urlopen
 import time
 from flask import jsonify
 
@@ -26,6 +29,7 @@ MAIN_DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + "/"
 IMAGE_DIRECTORY = MAIN_DIRECTORY + "images"
 
 UPLOAD_FOLDER = IMAGE_DIRECTORY + '/images/'
+
 
 
 account = 'mangroveclassifier'   # Azure account name
@@ -69,7 +73,7 @@ def get_batch_list(list_of_files, BATCH_SIZE):
     batch_list = [list_of_files[x - y: x] for x, y in zip(accumulate(length_to_split), length_to_split)]
     return batch_list
 
-'''def delete_files_in_dir(folder):
+def delete_files_in_dir(folder):
     if not folder.endswith('/'):
       folder += '/'
     if os.path.exists(folder):
@@ -81,38 +85,174 @@ def get_batch_list(list_of_files, BATCH_SIZE):
                 os.remove(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
-    return'''
+    return
 
 # input the azure client
-'''def download_model(client_model):
+def download_model(client_model):
     client_model.download_file('mvnmv4-merced/saved_model.pb', MAIN_DIRECTORY + 'mvnmv4-merced/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00000-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.data-00001-of-00002', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     client_model.download_file('mvnmv4-merced/variables/variables.index', MAIN_DIRECTORY + 'mvnmv4-merced/variables/')
     return 
-'''
+
 def classify():
 
+    '''url = 'https://mangroveclassifier.blob.core.windows.net/output-files/'
+
+    output_container_name = 'output-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
+    list_of_files = list(client.ls_files('', recursive=False))
+    print("number of tif files in output-files: ", len(list_of_files))
+
+    # generate batches of 32 and download the files 32 at a time
+    BATCH_SIZE = 32
+    batch_list = get_batch_list(list_of_files, BATCH_SIZE)
+    # print(batch_list)
+
+    #Set up dataframe that will hold classifications
+    column_names = ["prediction","p_0","p_1","filename"]
+    result_df = pd.DataFrame(columns=column_names)
+    
+
+    # load model
+    model = MAIN_DIRECTORY + "mvnmv4-merced"
+    model = load_model(model)
+    
+    for n, batch in enumerate(batch_list[4:6]):
+        # batch is a list of image names
+
+        # create list of img urls 
+        img_urls = []
+        for img in batch:
+            image_url = url + img
+            img_urls.append(image_url)
+
+        # Create array of 32 images
+        images = []
+        for img_url in img_urls:
+            with urlopen(img_url) as testImage:
+                image = Image.open(testImage)
+                image = np.asarray(image)
+                images.append(image[:, :, :3])
+        
+        # scale images
+        images = np.array(images)/255
+
+        # predict
+        predictions = model.predict(images)
+
+
+
+    #associate filenames and classification for each prediction
+    for i,prediction in tqdm(enumerate(predictions)):
+        # result_df.loc[i,"filename"] = data_gen.filenames[i]
+        result_df.loc[i,"filename"] = list_of_files[i]
+
+        #calculating predictions 
+        result_df.loc[i,"p_0"] = sigmoid(prediction[0])
+        result_df.loc[i,"p_1"] = sigmoid(prediction[1])
+        
+        #getting final class prediction
+        result_df.loc[i,"prediction"] = np.argmax(prediction)'''
+
+    '''print('result_df: ')
+    print(result_df)
+    print('sleeping 30 seconds')
+
+    time.sleep(30)
     # msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify?img=https://raw.githubusercontent.com/Azure-Samples/functions-python-tensorflow-tutorial/master/resources/assets/samples/cat1.png')
-    msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify')
+    start = 0
+    msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify?method=predict&start=' + start)
+    print(msg)
+
+    
 
     # print(msg_get)
-    json = msg.json()
+    json_msg = msg.json()
 
-    print('json 1st row: ', json[0])
-
-    result_df = pd.DataFrame.from_records(json)
+    print('json 1st row: ', json_msg[0])
+    json_msg = json.loads(json_msg)
+    result_df = pd.DataFrame.from_records(json_msg)
     print(result_df.head())
 
-    print('sleeping for 30 seconds')
-    time.sleep(30)
+
+
+
+    '''
     
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
-    '''list_of_files = list(client.ls_files('', recursive=False))
-    print("number of tif files in output-files: ", len(list_of_files))'''
+    list_of_files = list(client.ls_files('', recursive=False))
+    print("number of tif files in output-files: ", len(list_of_files))
+
+    # KEEP THIS
+    BATCH_SIZE = 10
+    BIG_BATCH_SIZE = 10
+
+    batch_list = get_batch_list(list_of_files, BATCH_SIZE)
+    n_batches = len(batch_list)
+    print('number of batches:' + str(n_batches))
+
+    big_batches = math.floor(n_batches/BIG_BATCH_SIZE)
     
-    '''# generate batches of 32 and download the files 32 at a time
+    json_msg_final = []
+
+    for bigbatch in range(big_batches):
+        start = str(bigbatch * BATCH_SIZE * BIG_BATCH_SIZE)
+        print('start:' + start)
+        msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify?method=predict&start=' + start)
+        print(msg)
+
+        # try again
+        while( msg.status_code != 200) : 
+            # restart the function
+            msg = requests.get('https://predict-mangroves.azurewebsites.net/api/classify?method=predict&start=' + start)
+            print(msg)
+                
+        
+        # print(msg_get)
+        json_msg = msg.json()
+        json_msg = json.loads(json_msg)
+        # print('json 1st row: ', json_msg[0])
+        print('entire: ', json_msg)
+        json_msg_final.append(json_msg)
+    
+    json_msg_final = list(itertools.chain.from_iterable(json_msg_final))
+    result_df = pd.DataFrame.from_records(json_msg_final)
+    print(result_df.head())
+
+    for n, batch in enumerate(batch_list):
+        # Download all tifs in the batch
+        # Memory: 0.16015625
+        for i in range(len(batch)):
+            client.download_file(batch[i], str(MAIN_DIRECTORY + "images/images/"))
+            
+        print('downsampling images')
+        ds_factor = 1/10
+        for rel_filename in batch:
+            FILENAME = UPLOAD_FOLDER + rel_filename
+            img, _ = raster.load_image(FILENAME)
+            _, _ = raster.downsample_raster(img, ds_factor, FILENAME)
+
+
+        # REUPLOAD DOWNSAMPLE TIFS TO DATABASE
+        # memory: 0Mb
+        print('reuploading batch')
+        for rel_filename in batch:
+            FILENAME = UPLOAD_FOLDER + rel_filename
+            client.upload_file(FILENAME, rel_filename)
+
+
+        # DELETE ALL TIFS IN images/images to prepare for the next batch 
+        # Memory: 54.1953125 Mb 
+        print('deleting images in folder')
+        delete_files_in_dir(UPLOAD_FOLDER)
+        
+        # gc.get_stats()
+        gc.collect()
+    '''
+    
+    # generate batches of 32 and download the files 32 at a time
     BATCH_SIZE = 32
     batch_list = get_batch_list(list_of_files, BATCH_SIZE)
 
@@ -134,8 +274,6 @@ def classify():
         # Memory: 0.16015625
         for i in range(len(batch)):
             client.download_file(batch[i], str(MAIN_DIRECTORY + "images/images/"))
-            
-
 
         #Read images using keras and split into batches
         # Memory: 0
@@ -196,9 +334,12 @@ def classify():
         delete_files_in_dir(UPLOAD_FOLDER)
         
         # gc.get_stats()
-        gc.collect() '''
+        gc.collect()
+        
+    '''
     
-    '''print('WAITING 20 seconds')
+    '''
+    print('WAITING 20 seconds')
     time.sleep(20)
     print('finished waiting 20 seconds')'''
     # DOWNLOAD ALL files in output blob in the hash folder 
@@ -211,6 +352,8 @@ def classify():
     # delete_files_in_dir(MAIN_DIRECTORY+'mvnmv4-merced/')
     os.mkdir(MAIN_DIRECTORY+'mvnmv4-merced/variables/')'''
     
+
+    # KEEP THIS 
     gc.collect()
 
     blobs = client.ls_files(path='')
@@ -219,10 +362,11 @@ def classify():
     
     # result_df = pd.read_csv('content.csv') # TEMP!
 
+    # KEEP THIS
     dest_folders = []
     # Organize tiles into folders
     for index, row in tqdm(result_df.iterrows()):
-        cur_file = IMAGE_DIRECTORY + "/" + row['filename']
+        cur_file = UPLOAD_FOLDER + row['filename']
         # cur_file = cur_file.replace("jpg","tif",2)
         classification = row['prediction'] 
 
@@ -238,16 +382,33 @@ def classify():
         os.rename(src, dest)
     print('organized into folders')
 
+    # rename all the file to have .tif extension
+    '''nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
+    nm_img_path = IMAGE_DIRECTORY + '/1/'
+    nm_img_list = prepend(nm_img_list, nm_img_path)
+    for nm_img in nm_img_list: 
+        os.rename(nm_img, nm_img+'.tif')
+
+    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+    # list of non-mangrove tif
+    m_img_path = IMAGE_DIRECTORY + '/0/'
+    m_img_list = prepend(m_img_list, m_img_path)
+    for m_img in m_img_list: 
+        os.rename(m_img, m_img+'.tif')'''
+
     # recombine classified tiles for each class
 
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/1.tif /content/images/1/*
     # first 2 args are '-o' and '1.tif' because you want to create the file 1.tif    # list of non-mangrove tif
+
+    # KEEP THIS
     nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
     nm_img_path = IMAGE_DIRECTORY + '/1/'
     nm_img_list = prepend(nm_img_list, nm_img_path)
-    print('nm_img_list:', nm_img_list)
 
-    files_string = " ".join(nm_img_list)
+    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+    m_img_path = IMAGE_DIRECTORY + '/0/'
+    m_img_list = prepend(m_img_list, m_img_path)
     
     raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+"1.tif")
     print('created 1.tif')
@@ -255,13 +416,6 @@ def classify():
     # TO DO: Put the next 3 blocks into functions
     # run gdal_merge.py and prepare the argument array: !gdal_merge.py -o /content/0.tif /content/images/0/*
     # first 2 args are '-o' and '0.tif' because you want to create the file 0.tif
-
-    # list of non-mangrove tif
-    m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
-    m_img_path = IMAGE_DIRECTORY + '/0/'
-    m_img_list = prepend(m_img_list, m_img_path)
-    files_string = " ".join(m_img_list)
-    print('m_img_list:', m_img_list)
 
     raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+"0.tif")
     print('created 0.tif')
@@ -300,9 +454,7 @@ def classify():
     print("classification finished")
     return
 
-
 '''
-
     # GENERATING PROBABILITY TILES
     for index, sample in tqdm(result_df.iterrows()):
         # loading original image

@@ -1,6 +1,8 @@
 import azure_blob
 import string, random, requests
 import flash
+from zipfile import ZipFile
+
 
 from celery import Celery
 
@@ -24,6 +26,7 @@ import base64
 
 from rasterio.plot import show
 import matplotlib as mpl
+import requests
 
 import rasterio.features
 from geojson import Point, Feature, FeatureCollection, dump
@@ -199,8 +202,9 @@ def login():
 @server.route('/download', methods=['GET'])
 def download():
 
-    # TO DO: Allow user to download the .tif (maybe .shp) files?
-
+    filelist= list(['0.prj', '1.prj', '0.tif', '1.tif', '0.shx', '1.shx', '0.shp', '1.shp', '1.dbf', '0.dbf'])
+    filename = 'all.zip'
+    createZip(filename, filelist)
     # Delete all the files uploaded + created 
     os.system('rm -rf ' + MAIN_DIRECTORY + 'images/*')
     print('mkdir ' + IMAGE_DIRECTORY + '/images/')
@@ -208,12 +212,12 @@ def download():
     os.system('mkdir ' + IMAGE_DIRECTORY + '/images/')
     print('mkdir ' + IMAGE_DIRECTORY + '/images/')
     
-    # list of files to delete so each user can start with same file structure
-    files_to_del = list(['0.prj', '1.prj', '0.tif', '1.tif', '0.shx', '1.shx', '0.shp', '1.cpg', '1.shp', '1.dbf', '0.dbf', '1.jpg', '0.jpg'])
+    '''# list of files to delete so each user can start with same file structure
+    files_to_del = filelist
     for f in files_to_del:
         os.system('rm -rf ' + MAIN_DIRECTORY + f)
         print('rm -rf ' + MAIN_DIRECTORY + f)
-
+    
     # delete the files in static images
     for f in os.listdir('static/images/'):
         os.system('rm -rf ' + MAIN_DIRECTORY + 'static/images/' + f)
@@ -229,36 +233,54 @@ def download():
     os.system('rm -rf ' + MAIN_DIRECTORY + 'n-mngrv.geojson')
     print('rm -rf ' + MAIN_DIRECTORY + 'n-mngrv.geojson')
     
-    html = render_template('index.html')
+    '''
+    return redirect(url_for('uploaded_file', filename=filename))
+
+@server.route('/searchresults', methods=['GET'])
+def searchResults():
+    
+    output_container_name = 'output-files'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
+    list_of_files = list(client.ls_files('', recursive=False))
+
+    html = ''
+    for filename in list_of_files:
+        html += filename+ '<br>'
+
     response = make_response(html)
     return response
+
 
 @server.route('/upload', methods=['POST'])
 def upload():
 
     print('in upload')
     # download() delete all the images from the prev instance of running the website
-
-    # check if the post request has the file part
-    if 'file' not in request.files:
-        print('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    # if user does not select file, browser also
-    # submit an empty part without filename
-    if file.filename == '':
-        flash('No selected file')
-        print('No Selected file')
-        
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        print('filename:', filename)
-        input_container = 'input-files'
-        client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container)
-        print('created client')
-        client.create_blob_from_stream(blob_name=filename, stream=file)
-        print('completed file upload')
-        # file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
+    # get the function running
+    msg = requests.get('https://azunzipmangroves.azurewebsites.net/')
+    if msg.status_code == 200:
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            print('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            print('No Selected file')
+            
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            print('filename:', filename)
+            input_container = 'input-files'
+            client = azure_blob.DirectoryClient(CONNECTION_STRING, input_container)
+            print('created client')
+            client.create_blob_from_stream(blob_name=filename, stream=file)
+            print('completed file upload')
+            # file.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
+    else: 
+        print('error occured HANDLE THIS!')
 
     html = render_template('index.html')
     response = make_response(html)
@@ -268,15 +290,34 @@ def upload():
 def visualization():
     return redirect(url_for('/visualization/_dash-update-component'))
 
+# create a zip file with name zip_name (1.zip) 
+# file list contains all the file going into the zip
+# delete is an option boolean that determines ifyou should delete the files or not
+def createZip(zip_name, filelist, delete=False):
+    with ZipFile(zip_name, 'w') as zipObj:
+        # Add multiple files to the zip
+        for filename in filelist:
+            zipObj.write(filename)
+    if delete: 
+        for filename in filelist:
+            os.remove(MAIN_DIRECTORY+filename)
+    return
+
 
 @server.route('/download_m', methods=['GET'])
 def download_m():
-    filename = '1.tif'
+
+    filelist=['1.dbf', '1.prj', '1.shp', '1.shx', '1.tif']
+    filename = '1.zip'
+    createZip(filename, filelist)
     return redirect(url_for('uploaded_file', filename=filename))
 
-@server.route('/', methods=['GET'])
+@server.route('/download_nm', methods=['GET'])
 def download_nm():
-    filename = '0.tif'
+
+    filelist=['0.dbf', '0.prj', '0.shp', '0.shx', '0.tif']
+    filename = '0.zip'
+    createZip(filename, filelist)
     return redirect(url_for('uploaded_file', filename=filename))
 
 @server.route('/uploads/<filename>')
@@ -309,16 +350,15 @@ def unzip():
 def classify_celery():
     print('this CELERY IS RUNNING')
     classify_mod.classify()
-    return msg
+    return 
 
 
 @server.route('/classify', methods=['GET'])
 def classify():
     print('in classify')
     
-    # msg = classify_celery.apply_async()
+    # classify_celery.apply_async()
     classify_mod.classify()
-    # print(msg)
     html = render_template('index.html')
     response = make_response(html)
     return response
@@ -548,7 +588,7 @@ def update_output(version):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
     server.run(debug=True)
 
 

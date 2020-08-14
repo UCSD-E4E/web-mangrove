@@ -2,11 +2,12 @@
 <html>
    <head>
      <title>Mangrove Classification </title>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
      <link rel="stylesheet" href=
 "https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/main.css') }}"/>
      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/schedule.css') }}"/>
-     <link rel="stylesheet" type="text/javascript" href="{{ url_for('static', filename='/assets/js/main.js') }}"/>
+
      <meta name="viewport" content="width=device-width,
         initial-scale=1">
   </head>
@@ -22,7 +23,8 @@
 								<h1>Mangrove  Image Classification</h1>
 							</header>
 							<footer>
-								<a href=""><div href = "schedule" class="button circled scrolly"><span style="font-size:0.8em;">Classify</span></div></a>
+                        <!-- Change this to div tag not a href-->
+								<a href="#classify"><div href = "#" class="button circled scrolly"><span style="font-size:0.8em;">Classify</span></div></a>
 							</footer>
 						</div>
 								<!-- Nav -->
@@ -49,8 +51,9 @@
       <div class="container">
         <div class="row">
            <div class="col-sm-6">
-              <h3> 1. Upload Files </h3>
-              <p> Directions: Upload the .zip file ("Choose File"). Then upload the file to the server ("Upload"). Then unzip the file ("Unzip") (future: accepting .tif files - now only .zip) </p>
+              <h3 id='upload'> 1. Upload Files </h3>
+              <p> Directions: Upload the .zip file ("Choose File"). Then upload the file to the server ("Upload"). Then unzip the file ("Unzip") (future: accepting .tif files - now only .zip)
+                 When the files are unziped, the tile names will be reflected in the panel on the right. </p>
               
               <!-- <input type="file" id="myFile"> -->
               <ul class=flashes>
@@ -88,15 +91,22 @@
               
            </div>
            <div class="col-sm-6">
-                <h3> 2. Classify </h3>
+                <h3 id='classify'> 2. Classify </h3>
                 <p> Directions: Once the file is uploaded, click below to classify the images. Important: Download and delete the files before closing this tab</p>
                 
                 <br>
+                <!-- <input type="submit" id="refreshAzureVal" value='Refresh' onsubmit="getResults()"> -->
+                <div id='refreshAzureVal' class="button" onclick="getResults()" >Refresh</div>
+
+
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                     <p id="resultsParagraph">(None)</p>
+                  </div>
+               </div>
 
                 <form action="classify" method="get" onsubmit="return validate()">
-                  <input type="text" name="author" id="authorInput">
                   <input type="submit" value="Classify Images">
-                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
                   <!-- loading icon but currently hidden-->
                   <div id="loading" style= "visibility: hidden;color:#b76e79;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
 
@@ -111,11 +121,13 @@
       <div class="container">
          <div class="row">
             <div class="col-sm-12">
-                <h3> 3. Visualize the Classification </h3>    
+                <h3 id='visualize'> 3. Visualize the Classification </h3>    
                 <br>
 
-                <iframe src="https://classifymangroves.herokuapp.com/visualization/_dash-update-component" width='100%' height='1000'></iframe>
-                <h4> Click download to download the respective .shp and .tif files. </h4> 
+                
+                <iframe src="http://127.0.0.1:8050/visualization/_dash-update-component" width='100%' height='1000'></iframe>  
+                <!-- <iframe src="https://classifymangroves.herokuapp.com/visualization/_dash-update-component" width='100%' height='1000'></iframe> -->
+                <h4> Click below to download the respective .shp and .tif files. </h4> 
                 <!-- <form action="visualization" method="GET" >  
                   <input type="submit" value="Prepare Visualization">
                </form>  -->       
@@ -127,7 +139,10 @@
             <img src="/static/images/0.jpg" alt ='' width="100%">
             <h4> Non-mangrove Classification</h4>    
             <form action="download_nm" method="GET" >  
-               <input type="submit" value="Download">
+               <button type="submit" style='width: fit-content;'>
+                  <i class="fa fa-download"></i>  Download
+              </button>
+              
             </form>         
          </div>
          
@@ -136,7 +151,10 @@
             <img src="/static/images/1.jpg" alt ='' width="100%">
             <h4> Mangrove Classification</h4> 
             <form action="download_m" method="GET" >  
-               <input type="submit" value="Download">
+               <button type="submit" style='width: fit-content;'>
+                  <i class="fa fa-download"></i>  Download
+              </button>
+              
             </form>                  
          </div>
    
@@ -150,9 +168,13 @@
       <div class="container">
          <div class="row">
             <div class="col-sm-12">
-                <h3> 4. Download </h3>    
+                <h3 id='download'> 4. Download All Files </h3>    
+                <h5> Click below to download the tif and shp files. </h5>    
                 <form action="download" method="get">
-                  <input type="submit" value="Download (only deletes the files now so you can upload again)">
+                  <button type="submit" style='width: fit-content;'>
+                     <i class="fa fa-download"></i>  Download
+                 </button>
+                 
                </form>     
             </div>
          </div>
@@ -160,4 +182,15 @@
       <br>
 
    </body>
+
+   <script src="static/assets/js/breakpoints.min.js"></script>
+   <script src="static/assets/js/jquery.scrolly.min.js"></script>
+   <script src="static/assets/js/jquery.scrollex.min.js"></script>
+   <script src="static/assets/js/jquery.min.js"></script>
+   <script src="static/assets/js/jquery.dropotron.min.js"></script>
+   <script src="static/assets/js/browser.min.js"></script>
+   <script src="static/assets/js/util.js"></script>
+   <script src="static/assets/js/main.js"></script>
+
+   
 </html>
