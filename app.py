@@ -379,7 +379,7 @@ def classify_celery():
 def prep_classification():
     classify_mod.post_classify()
     # not sure if this does anything?
-    html = render_template('index.html', classification_msg = "Performing classification... ")
+    html = render_template('index.html')
     response = make_response(html)
     return response
 

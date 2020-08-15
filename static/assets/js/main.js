@@ -26,7 +26,7 @@ function handleResponseInitialClassification(response)
 	
 function validate() {
 	if (confirmClassification() === true) {
-			let url = '/classify'
+		let url = '/classify'
 		if (request != null)
 			request.abort();
 		request = $.ajax(
@@ -99,8 +99,11 @@ $("button").click(function(e) {
     e.preventDefault();
 
 }); */
+
 classification_req = null
 setTimeout(classification_finished, 20000);
+
+
 function classification_finished()
 {    
 	let url = '/classificationfin';
