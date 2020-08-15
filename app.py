@@ -378,6 +378,7 @@ def classify_celery():
 @server.route('/prep_classification', methods=['GET'])
 def prep_classification():
     classify_mod.post_classify()
+    # not sure if this does anything?
     html = render_template('index.html', classification_msg = "Performing classification... ")
     response = make_response(html)
     return response
@@ -389,7 +390,7 @@ def classify():
     classify_celery.apply_async()
 
     # classify_mod.classify()
-    html = render_template('index.html')
+    html = "Performing classification... "
     response = make_response(html)
     return response
     

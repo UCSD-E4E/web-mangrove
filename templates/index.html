@@ -96,23 +96,22 @@
                 
                 <br>
                 <!-- <input type="submit" id="refreshAzureVal" value='Refresh' onsubmit="getResults()"> -->
-                <div id='refreshAzureVal' class="button" onclick="getResults()" >Refresh</div>
+                <!-- <div id='refreshAzureVal' class="button" onclick="getResults()" >Refresh</div> -->
 
 
                 <div class="panel panel-default">
+                  <div class="panel-heading">Tiles Names in Storage</div>
                   <div class="panel-body">
                      <p id="resultsParagraph">(None)</p>
                   </div>
                </div>
 
-                <form action="classify" method="get" onsubmit="return validate()">
-                  <input type="submit" value="Classify Images">
+                <!-- <form action="classify" method="get" onsubmit=validate()> -->
+               <button onclick="validate()">Classify Images</button>
                   <!-- loading icon but currently hidden-->
-                  <div id="loading" style= "visibility: hidden;color:#b76e79;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
-
-
-               </form>
-               <p id='classification_msg'>{{ classification_msg }}</p>
+               <div id="loading" style= "visibility: hidden;color:#008346;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
+      
+               <p id='classification_msg'> </p>
                <!-- if you want to pass a variable to the server name = variable name-->                
            </div>
         </div>

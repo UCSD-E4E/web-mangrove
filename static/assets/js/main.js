@@ -3,7 +3,7 @@ setTimeout(getResults, 1000);
 var allUnzipped = Boolean(true);
 
 // FUNCTIONS
-function validate() {  
+function confirmClassification() {  
     if (confirm("Do you want to classify the images?")) {
 		$("#loading").css("visibility", "visible");
 		return true;
@@ -11,6 +11,32 @@ function validate() {
     else {
         return false; 
     }            
+}
+
+function handleResponseInitialClassification(response)
+{ 
+	if (response == ""){
+		$('#classification_msg').html('An error occured.');
+	}
+   else {
+		$('#classification_msg').html(response);
+		$("#loading").css("visibility", "visible");
+	}
+}
+	
+function validate() {
+	if (confirmClassification() === true) {
+			let url = '/classify'
+		if (request != null)
+			request.abort();
+		request = $.ajax(
+			{
+				type: "GET",
+				url: url,
+				success: handleResponseInitialClassification
+			}
+		);
+	}	
 }
 
 // probs can do more here
