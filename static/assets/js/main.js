@@ -1,19 +1,53 @@
+// CONSTS
+setTimeout(getResults, 1000);
+var allUnzipped = Boolean(true);
+
+// FUNCTIONS
 function validate() {  
     if (confirm("Do you want to classify the images?")) {
-        return true;
+		$("#loading").css("visibility", "visible");
+		return true;
     }
     else {
         return false; 
     }            
 }
 
+// probs can do more here
+function validateUpload()
+{
+	allUnzipped = Boolean(true);
+}
+
+function handleResponseClassification(response)
+{
+	if ((response == 'Classification finished.') && ($("#classification_msg").html() === "Performing classification... ")){
+		$("#loading").css("visibility", "hidden");
+		$("#classification_msg").html('Classification has finished! Click "Prepare Visualization" to visualize the results')
+		// set classificaiotn msg to nothing
+		alert('Classification has finished! Click "Prepare Visualization" to visualize the results');
+	}
+}
         
 function handleResponse(response)
 {
-   if (response == "")
-	  $('#resultsParagraph').html("(None)");
-   else
-	  $('#resultsParagraph').html(response);
+
+	var prevhtmlString = $('#resultsParagraph').html()
+	if (response == ""){
+		$('#resultsParagraph').html("(No tiles found.)");
+	}
+   else {
+	   $('#resultsParagraph').html(response);
+	}
+		   
+	var htmlString = $('#resultsParagraph').html()
+
+	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
+		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(true))) {
+			alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.')
+			allUnzipped = Boolean(false);
+		}
+	} 	
 }
 
 let request = null;
@@ -29,15 +63,30 @@ function getResults()
 	request = $.ajax( {
 			type: "GET",
 			url: url,
-			success: handleResponse
+			success: handleResponse, 
+
 		} );
+	setTimeout(getResults, 3000);
 }
 /*
 $("button").click(function(e) {
     e.preventDefault();
 
 }); */
-         
+classification_req = null
+setTimeout(classification_finished, 20000);
+function classification_finished()
+{    
+	let url = '/classificationfin';
+	if (classification_req != null)
+		classification_req.abort();
+	classification_req = $.ajax( {
+			type: "GET",
+			url: url,
+			success: handleResponseClassification, 
+		} );
+	setTimeout(classification_finished, 20000);
+}
 
 /*
 	Helios by HTML5 UP

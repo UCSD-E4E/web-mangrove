@@ -99,6 +99,12 @@ def download_result_df():
     PRED_CONTAINER_NAME = 'prediction-results'
     client_pred = azure_blob.DirectoryClient(CONNECTION_STRING, PRED_CONTAINER_NAME)
     client_pred.download_file('content.csv', MAIN_DIRECTORY)
+
+    try: 
+        client_pred.rmdir('')
+    except: 
+        print("error when deleting from blob storage")
+
     return
 
 def save_result_df(filename):
@@ -347,11 +353,6 @@ def classify():
     result_df = pd.DataFrame.from_records(json_msg_final)
     print(result_df.head())
 
-    result_df.to_csv(r'content.csv')
-
-    filename_result_df = 'content.csv'
-    save_result_df(filename_result_df)
-
     for n, batch in enumerate(batch_list):
         # Download all tifs in the batch
         # Memory: 0.16015625
@@ -381,6 +382,9 @@ def classify():
         
         # gc.get_stats()
         gc.collect()
+    result_df.to_csv(r'content.csv')
+    filename_result_df = 'content.csv'
+    save_result_df(filename_result_df)
     return 
     '''
     

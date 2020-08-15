@@ -233,9 +233,28 @@ def download():
     '''
     return redirect(url_for('uploaded_file', filename=filename))
 
+@server.route('/classificationfin',  methods=['GET'])
+def classificationfin():
+    print('in classification fin')
+    
+    container_name = 'prediction-results'
+    client = azure_blob.DirectoryClient(CONNECTION_STRING, container_name)
+    list_of_files = list(client.ls_files('', recursive=False))
+    print(list_of_files)
+    if list_of_files != []:
+        if list_of_files[0] == 'content.csv':
+            html='Classification finished.'
+    else:
+        html = ''
+
+    response = make_response(html)
+    return response
+    
+
 @server.route('/searchresults', methods=['GET'])
 def searchResults():
     
+    print('search results is called')
     output_container_name = 'output-files'
     client = azure_blob.DirectoryClient(CONNECTION_STRING, output_container_name)
     list_of_files = list(client.ls_files('', recursive=False))
@@ -359,7 +378,7 @@ def classify_celery():
 @server.route('/prep_classification', methods=['GET'])
 def prep_classification():
     classify_mod.post_classify()
-    html = render_template('index.html')
+    html = render_template('index.html', classification_msg = "Performing classification... ")
     response = make_response(html)
     return response
 
@@ -399,6 +418,11 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
     if not path.exists(image_filename):
         image_filename = "image_nm_red-perm.png"
     image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
+
+    if not path.exists(image_filename) and not path.exists(image_filename):
+        sample = True
+    else: 
+        sample = False
 
     mngrv_tiles = len(mngrv_geojson['features'])
     n_mngrv_tiles = len(n_mngrv_geojson['features'])
@@ -461,7 +485,11 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
         layers=(border+mangrove+non_mangrove)
     # version =='prob'
 
-    layout = dict(title="Visualization of Mangrove CNN",
+    if sample:
+        title = "Sample Visualization of Mangrove CNN"
+    else:
+        title = "Visualization of Mangrove CNN"
+    layout = dict(title=title,
                 autosize=False,
                 width=1400,
                 height=800,

@@ -67,10 +67,10 @@
               <br>
               
             
-              <form action="{{ url_for('upload')}}" method="POST" enctype=multipart/form-data>
-               <input type=file name=file>
-               <br>
-               <input type=submit value=Upload>
+              <form action="{{ url_for('upload')}}" onsubmit=validateUpload() method="POST" enctype=multipart/form-data>
+                  <input type=file name=file>
+                  <br>
+                  <input type=submit value=Upload>
                </form>
 
                
@@ -110,7 +110,9 @@
                   <!-- loading icon but currently hidden-->
                   <div id="loading" style= "visibility: hidden;color:#b76e79;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
 
+
                </form>
+               <p id='classification_msg'>{{ classification_msg }}</p>
                <!-- if you want to pass a variable to the server name = variable name-->                
            </div>
         </div>
