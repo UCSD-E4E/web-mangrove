@@ -3,8 +3,7 @@
    <head>
      <title>Mangrove Classification </title>
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-     <link rel="stylesheet" href=
-"https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css"> 
      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/main.css') }}"/>
      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/schedule.css') }}"/>
 
@@ -24,7 +23,7 @@
 							</header>
 							<footer>
                         <!-- Change this to div tag not a href-->
-								<a href="#classify"><div href = "#" class="button circled scrolly"><span style="font-size:0.8em;">Classify</span></div></a>
+								<a href="#classify"><div href = "#" class="button circled scrolly"><span style="font-size:0.8em;">Classify  </span></div></a>
 							</footer>
 						</div>
 								<!-- Nav -->
@@ -49,93 +48,96 @@
       </ul>
 
       <div class="container">
-        <div class="row">
-           <div class="col-sm-6">
-              <h3 id='upload'> 1. Upload Files </h3>
-              <p> Directions: Upload the .zip file ("Choose File"). Then upload the file to the server ("Upload"). Then unzip the file ("Unzip") (future: accepting .tif files - now only .zip)
-                 When the files are unziped, the tile names will be reflected in the panel on the right. </p>
-              
-              <!-- <input type="file" id="myFile"> -->
-              <ul class=flashes>
-               {% for message in messages %}
-                 <li>{{ message }}</li>
-               {% endfor %}
-               </ul>
-               <div class="progress-bar" id="progressBar">
-                  
-               </div>
-              <br>
-              
-            
-              <form action="{{ url_for('upload')}}" onsubmit=validateUpload() method="POST" enctype=multipart/form-data>
-                  <input type=file name=file>
-                  <br>
-                  <input type=submit value=Upload>
-               </form>
-
-               
-               <br>
-               <!-- <div class="panel panel-default">
-                  <div class="panel-body">
-                     <p id="resultsParagraph">(None)</p>
-                  </div>
-               </div>-->
-               <!-- 
-               <form action="unzip" method="get">
-                  <input type="submit" value="Unzip">
-               </form>
-            
-               <form action="upload" method="get">
-               <input type="submit" value="Upload File">
-            </form> --> 
-              
-           </div>
-           <div class="col-sm-6">
-                <h3 id='classify'> 2. Classify </h3>
-                <p> Directions: Once the file is uploaded, click below to classify the images. Important: Download and delete the files before closing this tab</p>
-                
-                <br>
-                <!-- <input type="submit" id="refreshAzureVal" value='Refresh' onsubmit="getResults()"> -->
-                <!-- <div id='refreshAzureVal' class="button" onclick="getResults()" >Refresh</div> -->
-
-
-                <div class="panel panel-default">
-                  <div class="panel-heading">Tiles Names in Storage</div>
-                  <div class="panel-body">
-                     <p id="resultsParagraph">(None)</p>
+         <div class='col-sm-6'>
+            <div class="container">
+               <div class="row">
+                  <div class="col-sm-12">
+                     <h3 id='upload'>  <i class="fa fa-leaf"></i> File Upload</h3>
+                     <p> Choose .zip file to upload and click Upload to unzip. The unzipped tiles will be reflected in the panel on the right. </p>
+                     
+                     <!-- <input type="file" id="myFile"> -->
+                     <ul class=flashes>
+                        {% for message in messages %}
+                        <li>{{ message }}</li>
+                        {% endfor %}
+                        </ul>
+                        <div class="progress-bar" id="progressBar">
+                           
+                        </div>
+                     <br>
+                     
+                     
+                     <form action="{{ url_for('upload')}}" onsubmit=validateUpload() method="POST" enctype=multipart/form-data>
+                           <input type=file name=file>
+                           <br>
+                           <input type=submit value=Upload>
+                        </form>
+   
+                        
+                        <br>
+                        <!-- <div class="panel panel-default">
+                           <div class="panel-body">
+                              <p id="resultsParagraph">(None)</p>
+                           </div>
+                        </div>-->
+                        <!-- 
+                        <form action="unzip" method="get">
+                           <input type="submit" value="Unzip">
+                        </form>
+                     
+                        <form action="upload" method="get">
+                        <input type="submit" value="Upload File">
+                     </form> --> 
+                     
                   </div>
                </div>
-
-                <!-- <form action="classify" method="get" onsubmit=validate()> -->
-               <button onclick="validate()">Classify Images</button>
+            </div>
+         </div>   
+         <div class='col-sm-6'>
+            <div class="container">
+               <div class="row">
+                  <h3 id='classify'>  <i class="fa fa-leaf"></i> Classify </h3>
+               </div>
+               <div class="col-sm-12">
+                  <p> After uploading the file and all tiles exist, click below to classify the images.</p>
+               </div>
+               <div class="col-sm-12">
+                  <div class="panel panel-default">
+                     <div class="panel-heading">Tiles in Storage</div>
+                        <div class="panel-body">
+                        <p id="resultsParagraph">(None)</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="col-sm-12">
+                  <!-- <form action="classify" method="get" onsubmit=validate()> -->
+                  <button onclick="validate()">Classify Images</button>
                   <!-- loading icon but currently hidden-->
-               <div id="loading" style= "visibility: hidden;color:#008346;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
+                  <div id="loading" style= "visibility: hidden;color:#008346;font-weight:700;"><span id="msg"></span><i class="fa fa-spinner fa-spin" style="margin-left:0.5em;"></i></div>
       
-               <p id='classification_msg'> </p>
-               <!-- if you want to pass a variable to the server name = variable name-->                
-           </div>
-        </div>
-     </div>
+                  <p id='classification_msg'> </p>
+               <!-- if you want to pass a variable to the server name = variable name-->     
+               </div>           
 
+             </div>      
+         </div>
+      </div>
+      
+      
       <br>
       
       <div class="container">
          <div class="row">
             <div class="col-sm-12">
-                <h3 id='visualize'> 3. Visualize the Classification </h3>    
+                <h3 id='visualize'>  <i class="fa fa-leaf"></i> Visualize the Classification </h3>    
                 <br>
 
                 <form action="prep_classification" method="get">
                   <input type="submit" value="Prepare Visualization">
                </form>
-
-                
                 <!-- <iframe src="http://127.0.0.1:8050/visualization/_dash-update-component" width='100%' height='1000'></iframe>  -->
-                <iframe src="https://classifymangroves.herokuapp.com/visualization/_dash-update-component" width='100%' height='1000'></iframe> 
-                <h4> Click below to download the respective .shp and .tif files. </h4> 
-                <!-- <form action="visualization" method="GET" >  
-                  <input type="submit" value="Prepare Visualization">
-               </form>  -->       
+                <iframe src="https://classifymangroves.herokuapp.com/visualization/_dash-update-component" width='100%' height='1000'></iframe>    
                <br>            
             </div>
          </div>
@@ -143,24 +145,13 @@
          <div class="col-sm-4">
             <img src="/static/images/0.jpg" alt ='' width="100%">
             <h4> Non-mangrove Classification</h4>    
-            <form action="download_nm" method="GET" >  
-               <button type="submit" style='width: fit-content;'>
-                  <i class="fa fa-download"></i>  Download
-              </button>
-              
-            </form>         
          </div>
          
         
          <div class="col-sm-4">
             <img src="/static/images/1.jpg" alt ='' width="100%">
             <h4> Mangrove Classification</h4> 
-            <form action="download_m" method="GET" >  
-               <button type="submit" style='width: fit-content;'>
-                  <i class="fa fa-download"></i>  Download
-              </button>
-              
-            </form>                  
+      
          </div>
    
          <!-- <div class="col-sm-4">
@@ -173,14 +164,43 @@
       <div class="container">
          <div class="row">
             <div class="col-sm-12">
-                <h3 id='download'> 4. Download All Files </h3>    
-                <h5> After classifying your image, click below to download the tif and shp files. </h5>    
-                <form action="download" method="get">
-                  <button type="submit" style='width: fit-content;'>
-                     <i class="fa fa-download"></i>  Download
-                 </button>
-                 
-               </form>     
+                <h3 id='download'>  <i class="fa fa-leaf"></i> Download </h3>    
+                <br>
+                <div class="row">
+                  <p> After classifying your image, click below to download the respective .shp and .tif files. </p>   
+                </div>
+                
+                <div class="col-sm-4">
+                  <h4> Non-mangrove Classification</h4>    
+                  <form action="download_nm" method="GET" >  
+                     <button type="submit" style='width: fit-content;'>
+                        <i class="fa fa-download"></i>  Download
+                    </button>
+                    
+                  </form>         
+               </div>
+               
+              
+               <div class="col-sm-4">
+                  <h4> Mangrove Classification</h4> 
+                  <form action="download_m" method="GET" >  
+                     <button type="submit" style='width: fit-content;'>
+                        <i class="fa fa-download"></i>  Download
+                    </button>
+                    
+                  </form>                  
+               </div>
+
+               <div class="col-sm-4">
+                  <h4> All files</h4> 
+                  <form action="download" method="get">
+                     <button type="submit" style='width: fit-content;'>
+                        <i class="fa fa-download"></i>  Download
+                    </button>
+                  </form>                    
+               </div>
+
+
             </div>
          </div>
       </div>

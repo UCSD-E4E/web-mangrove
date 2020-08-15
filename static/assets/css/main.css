@@ -2087,14 +2087,12 @@ input, textarea {
 
 /* Form */
 /* 
-
 	form label {
 		display: block;
 		font-weight: 400;
 		color: #483949;
 		margin: 0 0 1em 0;
 	}
-
 	form input[type="text"],
 	form input[type="email"],
 	form input[type="password"],
@@ -2113,7 +2111,6 @@ input, textarea {
 		-ms-transition: background-color 0.35s ease-in-out, border-color 0.35s ease-in-out;
 		transition: background-color 0.35s ease-in-out, border-color 0.35s ease-in-out;
 	}
-
 		form input[type="text"]:focus,
 		form input[type="email"]:focus,
 		form input[type="password"]:focus,
@@ -2122,34 +2119,27 @@ input, textarea {
 			background: #fff;
 			border-color: #df7366;
 		}
-
 	form input[type="text"],
 	form input[type="email"],
 	form input[type="password"],
 	form select {
 		line-height: 1em;
 	}
-
 	form textarea {
 		min-height: 9em;
 	}
-
 	form ::-webkit-input-placeholder {
 		color: #555 !important;
 	}
-
 	form :-moz-placeholder {
 		color: #555 !important;
 	}
-
 	form ::-moz-placeholder {
 		color: #555 !important;
 	}
-
 	form :-ms-input-placeholder {
 		color: #555 !important;
 	}
-
 	form ::-moz-focus-inner {
 		border: 0;
 	}
@@ -2159,37 +2149,29 @@ input, textarea {
 	table {
 		width: 100%;
 	}
-
 		table.default {
 			width: 100%;
 		}
-
 			table.default tbody tr {
 				border-top: solid 1px #e5e5e5;
 			}
-
 				table.default tbody tr:first-child {
 					border-top: 0;
 				}
-
 				table.default tbody tr:nth-child(2n+1) {
 					background: #fafafa;
 				}
-
 			table.default td {
 				padding: 0.5em 1em 0.5em 1em;
 			}
-
 			table.default th {
 				text-align: left;
 				font-weight: 400;
 				padding: 0.5em 1em 0.5em 1em;
 			}
-
 			table.default thead {
 				border-bottom: solid 2px #e5e5e5;
 			}
-
 			table.default tfoot {
 				border-top: solid 2px #e5e5e5;
 			}

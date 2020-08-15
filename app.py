@@ -102,15 +102,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-'''#function for fixing shapefiles to only create polygons around the the specified class
-def fix_shp(filename):
-    shp = geopandas.read_file(filename)
-    for index, feature in tqdm(shp.iterrows()):
-        if feature["DN"] == 0:
-            shp.drop(index, inplace=True)
-    shp.to_file(filename)
-    return shp'''
-
 def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
@@ -118,58 +109,8 @@ def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
 
 @server.route('/', methods=['GET', 'POST'])
 def home():
-    '''if request.method == 'POST':
-        file = request.files['file']
-        filename = secure_filename(file.filename)
-
-
-        fileextension = filename.rsplit('.',1)[1]
-        Randomfilename = id_generator()
-        filename = Randomfilename + '.' + fileextension
-        try:
-            # Create the BlockBlockService that is used to call the Blob service for the storage account
-            block_blob_service = BlockBlobService(account_name='mangroveclassifier', account_key='s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==')
-
-            # Create a container called 'quickstartblobs'.
-            container_name ='quickstartblobs'
-            block_blob_service.create_container(container_name)
-
-            # Set the permission so the blobs are public.
-            block_blob_service.set_container_acl(container_name, public_access=PublicAccess.Container)
-
-            # Upload the created file, use local_file_name for the blob name
-            block_blob_service.create_blob_from_stream(container_name, filename, file)
-
-            # List the blobs in the container
-            print("\nList blobs in the container")
-            generator = block_blob_service.list_blobs(container_name)
-            for blob in generator:
-                print("\t Blob name: " + blob.name)
-
-            # Clean up resources. This includes the container and the temp files
-            # block_blob_service.delete_container(container_name)
-        except Exception as e:
-            print(e)  '''
-        #ref =  'https://'+ account + '.blob.core.windows.net/' + container_name + '/' + filename
-        #return '''
-        #<!doctype html>
-        #<title>File Link</title>
-        #<h1>Uploaded File Link</h1>
-        #<p>''' + ref + '''</p>
-        #<img src="'''+ ref +'''">
-        #'''
-    #return 
-    '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-    <p><input type=file name=file>
-        <input type=submit value=Upload>
-    </form>
-    '''
     return render_template('index.html')
-    # return render_template('index.html', summary=str(type(model)))
+
 @server.route('/index')
 def index():
     return render_template('index.html')
@@ -347,27 +288,6 @@ def download_nm():
 def uploaded_file(filename):
     return send_from_directory(MAIN_DIRECTORY,
                                filename)
-
-# dont need this anymore because the azure function AzUnzipMangroves takes care of it (when a zip files is uploaded to the Blob, the unzip function is triggered)
-'''@server.route('/unzip', methods=['GET'])
-def unzip():
-
-    uploaded_file_name = os.listdir('images/images')[0]
-    os.system("unzip " + UPLOAD_FOLDER + uploaded_file_name)
-    print("unzip " + UPLOAD_FOLDER + uploaded_file_name)
-
-    os.system("rm -rf " + UPLOAD_FOLDER + uploaded_file_name)
-    print("rm -rf " + UPLOAD_FOLDER + uploaded_file_name)
-
-    # !mv *.tif /content/images/images/
-    os.system("mv " + "*.tif " + UPLOAD_FOLDER)
-    print("mv " + "*.tif " + UPLOAD_FOLDER)
-
-
-    html = render_template('index.html')
-    response = make_response(html)
-    return response
-'''
 
 @celery.task()
 def classify_celery():
@@ -608,33 +528,6 @@ def update_figure(n_clicks, version):
 
     dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
     return dict_of_fig
-
-'''@app.callback(dash.dependencies.Output('viz', 'figure'), 
-[dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
-dash.dependencies.Input('radiobtn', 'value')])
-def update_output(version):
-    print('version in app callback: ', version)
-    # open the tif image and create geojson file
-    FILENAME = '0.tif'
-    final_filename = 'mngrv.geojson'
-    if path.exists(final_filename):
-        with open(final_filename) as f:
-            mngrv_geojson = json.load(f)
-    else:
-        mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
-
-    # open the tif image and create geojson file
-    FILENAME = '1.tif'
-    final_filename = 'n-mngrv.geojson'
-    if path.exists(final_filename):
-        with open(final_filename) as f:
-            n_mngrv_geojson = json.load(f)
-    else:
-        n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
-    
-    dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
-    return dict_of_fig'''
-
 
 if __name__ == '__main__':
     app.run_server(debug=False)
