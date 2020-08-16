@@ -406,7 +406,7 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
         layers=(border+mangrove+non_mangrove)
     # version =='prob'
 
-    if sample:
+    '''if sample:
         title = "Sample Visualization of Mangrove CNN"
     else:
         title = "Visualization of Mangrove CNN"
@@ -414,6 +414,26 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
                 autosize=False,
                 width=1400,
                 height=800,
+                hovermode='closest',
+                hoverdistance = 30,
+                mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                            layers=layers,
+                            bearing=0,
+                            center=dict(
+                                        lat=avg_lat,  # the center of this regions
+                                        lon=avg_lon),
+                            pitch=0,
+                            zoom=16,
+                            style = 'mapbox://styles/mapbox/satellite-v8'
+
+                            )
+                )'''
+
+    layout = dict(
+                autosize=False,
+                width=1400,
+                height=800,
+                margin={'t': 0, 'l':0, 'r':0, 'b':0},
                 hovermode='closest',
                 hoverdistance = 30,
                 mapbox=dict(accesstoken=MAPBOX_APIKEY,
@@ -448,21 +468,21 @@ def start_dash():
         dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
 
         app.layout = html.Div([html.Button('Update', id='view-mine', n_clicks=0), 
-            dcc.Checklist(id='radiobtn', 
+            dcc.Checklist(inputStyle={'-webkit-appearance': 'checkbox'}, id='radiobtn', 
             options=[
                 {'label': 'Mangrove', 'value': 'mangrove'},
                 {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
                 # {'label': 'Everything', 'value': 'everything'},
                 # {'label': 'Probability', 'value': 'prob'}
             ],
-            value=['mangrove', 'non-mangrove'],
-            labelStyle={'display': 'inline-block', 'textAlign': 'center'}
-        )  , 
+            value=['mangrove', 'non-mangrove'], 
+            labelStyle={'display': 'inline-block', 'textAlign': 'center', 'cursor': 'pointer'})  , 
             dcc.Graph(id='viz', figure=dict_of_fig)
             ])
     return
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
 
 global mngrv_geojson
