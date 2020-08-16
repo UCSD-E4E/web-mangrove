@@ -3,6 +3,8 @@ setTimeout(getResults, 1000);
 var allUnzipped = Boolean(true);
 
 // FUNCTIONS
+
+
 function confirmClassification() {  
     if (confirm("Do you want to classify the images?")) {
 		$("#loading").css("visibility", "visible");

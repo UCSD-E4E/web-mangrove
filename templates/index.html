@@ -9,6 +9,8 @@
 
      <meta name="viewport" content="width=device-width,
         initial-scale=1">
+   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
   </head>
    
 
@@ -53,41 +55,16 @@
                <div class="row">
                   <div class="col-sm-12">
                      <h3 id='upload'>  <i class="fa fa-leaf"></i> File Upload</h3>
-                     <p> Choose .zip file to upload and click Upload to unzip. The unzipped tiles will be reflected in the panel on the right. </p>
-                     
-                     <!-- <input type="file" id="myFile"> -->
-                     <ul class=flashes>
-                        {% for message in messages %}
-                        <li>{{ message }}</li>
-                        {% endfor %}
-                        </ul>
-                        <div class="progress-bar" id="progressBar">
-                           
-                        </div>
-                     <br>
-                     
-                     
+                     <p> Choose .zip file to upload. Click Upload to unzip automatically. Unzipped tiles will be displayed on the right. </p>
+               
                      <form action="{{ url_for('upload')}}" onsubmit=validateUpload() method="POST" enctype=multipart/form-data>
                            <input type=file name=file>
                            <br>
-                           <input type=submit value=Upload>
-                        </form>
-   
+                           <!-- <p id='hiddenUploadText'> <i class="fa fa-cloud-upload"></i>  Upload </p> -->
+
+                           <input id='fileUploadSubmit' type=submit value="Upload"> 
+                     </form>
                         
-                        <br>
-                        <!-- <div class="panel panel-default">
-                           <div class="panel-body">
-                              <p id="resultsParagraph">(None)</p>
-                           </div>
-                        </div>-->
-                        <!-- 
-                        <form action="unzip" method="get">
-                           <input type="submit" value="Unzip">
-                        </form>
-                     
-                        <form action="upload" method="get">
-                        <input type="submit" value="Upload File">
-                     </form> --> 
                      
                   </div>
                </div>
