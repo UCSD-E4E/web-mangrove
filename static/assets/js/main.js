@@ -4,7 +4,6 @@ var allUnzipped = Boolean(true);
 
 // FUNCTIONS
 
-
 function confirmClassification() {  
     if (confirm("Do you want to classify the images?")) {
 		$("#loading").css("visibility", "visible");
@@ -51,6 +50,7 @@ function handleResponseClassification(response)
 {
 	if ((response == 'Classification finished.') && ($("#classification_msg").html() === "Performing classification... ")){
 		$("#loading").css("visibility", "hidden");
+		
 		$("#classification_msg").html('Classification has finished! Click "Prepare Visualization" to visualize the results')
 		// set classificaiotn msg to nothing
 		alert('Classification has finished! Click "Prepare Visualization" to visualize the results');
@@ -143,9 +143,9 @@ function classification_finished()
 
 	// Play initial animations on page load.
 		$window.on('load', function() {
-			window.setTimeout(function() {
-				$body.removeClass('is-preload');
-			}, 100);
+			//window.setTimeout(function() {
+				//$body.removeClass('is-preload');
+			//}, 100);
 		});
 /*
 	// Dropdowns.

@@ -1,3 +1,7 @@
+html {
+	scroll-behavior: smooth;
+  }
+
 div.container4 {
     margin: 0;
     position: absolute;
@@ -329,7 +333,7 @@ input, textarea {
 
 	p, ul, ol, dl, table {
 		margin-bottom: 1em;
-		padding: 20px;
+		padding: 0px;
 	}
 
 	p {
@@ -2412,13 +2416,13 @@ input, textarea {
 		}
 
 	body.homepage.is-preload #header:after {
-		opacity: 1;
+		opacity: 0.6;
 	}
 
 /* Nav */
 
 	#nav {
-		position: absolute;
+		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100%;
@@ -3277,5 +3281,5 @@ input, textarea {
   /* Header */
 
 	body.homepage.is-preload #header:after {
-		opacity: 0;
+		opacity: 0.05;
 	}

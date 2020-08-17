@@ -2418,12 +2418,12 @@ input, textarea {
 /* Nav */
 
 	#nav {
-		position: absolute;
+		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100%;
 		text-align: center;
-		padding: 1.5em 0 1.5em 0;
+		padding: 0.5em 0 0.5em 0;
 		z-index: 1;
 		overflow: hidden;
 	}
@@ -3277,5 +3277,5 @@ input, textarea {
   /* Header */
 
 	body.homepage.is-preload #header:after {
-		opacity: 0;
+		opacity: 0.5;
 	}
