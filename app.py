@@ -306,8 +306,8 @@ def prep_classification():
 @server.route('/classify', methods=['GET'])
 def classify():
     print('in classify')
-    
-    classify_celery.apply_async()
+
+    # classify_celery.apply_async()
 
     # classify_mod.classify()
     html = "Performing classification... "

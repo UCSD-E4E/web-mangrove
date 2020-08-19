@@ -57,8 +57,8 @@
                      <h3 id='upload'>  <i class="fa fa-leaf"></i> File Upload</h3>
                      <p> Choose .zip file to upload. Click Upload to unzip automatically. Unzipped tiles will be displayed on the right. </p>
                
-                     <form action="{{ url_for('upload')}}" onsubmit=validateUpload() method="POST" enctype=multipart/form-data>
-                           <input type=file name=file>
+                     <form id='uploadForm' action="{{ url_for('upload')}}" onsubmit="return validateUpload(this);" method="POST" enctype=multipart/form-data>
+                           <input id='file' type=file name=file>
                            <br>
                            <!-- <p id='hiddenUploadText'> <i class="fa fa-cloud-upload"></i>  Upload </p> -->
 

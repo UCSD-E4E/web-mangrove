@@ -1,19 +1,10 @@
 // CONSTS
-setTimeout(getResults, 1000);
+setTimeout(getResults, 100);
 var allUnzipped = Boolean(true);
 
 // FUNCTIONS
 
-function confirmClassification() {  
-    if (confirm("Do you want to classify the images?")) {
-		$("#loading").css("visibility", "visible");
-		return true;
-    }
-    else {
-        return false; 
-    }            
-}
-
+// make the loading sign and classification status message visible after AJAX request is sent
 function handleResponseInitialClassification(response)
 { 
 	if (response == ""){
@@ -25,25 +16,68 @@ function handleResponseInitialClassification(response)
 	}
 }
 	
+function tilesExist() {
+	if ($('#resultsParagraph').html() === '(None)' || $('#resultsParagraph').html() === '(No tiles found.)') {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
 function validate() {
-	if (confirmClassification() === true) {
-		let url = '/classify'
-		if (request != null)
-			request.abort();
-		request = $.ajax(
-			{
-				type: "GET",
-				url: url,
-				success: handleResponseInitialClassification
-			}
-		);
+	let request = null;
+	if (confirm("Do you want to classify the images?")) {
+		if (tilesExist() == true) {
+			let url = '/classify'
+			if (request != null)
+				request.abort();
+			request = $.ajax(
+				{
+					type: "GET",
+					url: url,
+					success: handleResponseInitialClassification
+				}
+			);
+		}
 	}	
 }
 
-// probs can do more here
-function validateUpload()
+var _validFileExtensions = [".tif", ".zip"]; 
+function validateUpload(oForm)
 {
-	allUnzipped = Boolean(true);
+	var arrInputs = oForm.getElementsByTagName("input");
+    for (var i = 0; i < arrInputs.length; i++) {
+		var oInput = arrInputs[i];
+		console.log(oInput.type)
+        if (oInput.type == "file") {
+			var sFileName = oInput.value;
+			console.log('length: ')
+			console.log(sFileName.length);
+			if (sFileName.length === 0) {
+				alert("Please choose a file. Allowed extensions are: " + _validFileExtensions.join(", "));
+				return false;
+			}
+
+            else if (sFileName.length > 0) {
+                var blnValid = false;
+                for (var j = 0; j < _validFileExtensions.length; j++) {
+                    var sCurExtension = _validFileExtensions[j];
+                    if (sFileName.substr(sFileName.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
+                        blnValid = true;
+                        break;
+                    }
+                }
+                
+                if (!blnValid) {
+                    alert("Sorry, " + String(sFileName).substring(12) + " is invalid, allowed extensions are: " + _validFileExtensions.join(", "));
+                    return false;
+                }
+            }
+        }
+    }
+  
+    return true;
 }
 
 function handleResponseClassification(response)
@@ -78,13 +112,14 @@ function handleResponse(response)
 	} 	
 }
 
-let request = null;
+
          
 function getResults()
 {    
 	// let author = $('#authorInput').val();
 	//author = encodeURIComponent(author);
 	// let url = '/searchresults?author=' + author;
+	let request = null;
 	let url = '/searchresults';
 	if (request != null)
 		request.abort();
@@ -94,7 +129,7 @@ function getResults()
 			success: handleResponse, 
 
 		} );
-	setTimeout(getResults, 3000);
+	setTimeout(getResults, 2000);
 }
 /*
 $("button").click(function(e) {
@@ -102,13 +137,13 @@ $("button").click(function(e) {
 
 }); */
 
-classification_req = null
 setTimeout(classification_finished, 20000);
 
 
 function classification_finished()
 {    
 	let url = '/classificationfin';
+	let classification_req = null;
 	if (classification_req != null)
 		classification_req.abort();
 	classification_req = $.ajax( {
@@ -143,9 +178,9 @@ function classification_finished()
 
 	// Play initial animations on page load.
 		$window.on('load', function() {
-			//window.setTimeout(function() {
-				//$body.removeClass('is-preload');
-			//}, 100);
+			window.setTimeout(function() {
+				$body.removeClass('is-preload');
+			}, 10);
 		});
 /*
 	// Dropdowns.
