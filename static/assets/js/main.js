@@ -1,5 +1,5 @@
 // CONSTS
-var allUnzipped = Boolean(true);
+var allUnzipped = Boolean(false); // global variable. true if all files are unzipped. false if still in the unzip stage or nothing has been uploaded yet
 
 // FUNCTIONS
 
@@ -26,8 +26,9 @@ function tilesExist() {
 
 function validate() {
 	let request = null;
-	if (confirm("Do you want to classify the images?")) {
-		if (tilesExist() == true) {
+
+	if (tilesExist() == true) {
+		if (confirm("Do you want to classify the images?")) {
 			let url = '/classify'
 			if (request != null)
 				request.abort();
@@ -38,13 +39,18 @@ function validate() {
 					success: handleResponseInitialClassification
 				}
 			);
-		}
+		}	
+	}
+	else {
+		alert('No tiles exists. ')
 	}	
 }
 
 var _validFileExtensions = [".tif", ".zip"]; 
 function validateUpload(oForm)
 {
+	allUnzipped = Boolean(false);
+
 	var arrInputs = oForm.getElementsByTagName("input");
     for (var i = 0; i < arrInputs.length; i++) {
 		var oInput = arrInputs[i];
@@ -102,19 +108,12 @@ function initial_handleResponse(response)
 	}
 		   
 	var htmlString = $('#resultsParagraph').html()
-
-	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
-		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(true))) {
-			allUnzipped = Boolean(false);
-		}
-	} 	
 }
 
         
 function handleResponse(response)
 {
-
-	var prevhtmlString = $('#resultsParagraph').html()
+	var prevhtmlString = $('#resultsParagraph').html();
 	if (response == ""){
 		$('#resultsParagraph').html("(No tiles found.)");
 	}
@@ -122,24 +121,20 @@ function handleResponse(response)
 	   $('#resultsParagraph').html(response);
 	}
 		   
-	var htmlString = $('#resultsParagraph').html()
+	var htmlString = $('#resultsParagraph').html();
 
 	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
-		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(true))) {
-			if (prevhtmlString == "(No tiles found.)") {
-				alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.')
-				allUnzipped = Boolean(false);
-			}
-			
+		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(false))) {
+				alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.');
+				allUnzipped = Boolean(true);
 		}
 	} 	
 }
 
-
 function initial_getResults()
 {    
 	// let author = $('#authorInput').val();
-	//author = encodeURIComponent(author);
+	// author = encodeURIComponent(author);
 	// let url = '/searchresults?author=' + author;
 	let request = null;
 	let url = '/searchresults';
@@ -222,6 +217,7 @@ function classification_finished()
 				$body.removeClass('is-preload');
 			}, 10);
 			initial_getResults();
+			setTimeout(getResults, 1000);
 		});
 /*
 	// Dropdowns.
