@@ -1,5 +1,4 @@
 // CONSTS
-setTimeout(getResults, 100);
 var allUnzipped = Boolean(true);
 
 // FUNCTIONS
@@ -90,6 +89,27 @@ function handleResponseClassification(response)
 		alert('Classification has finished! Click "Prepare Visualization" to visualize the results');
 	}
 }
+
+function initial_handleResponse(response)
+{
+
+	var prevhtmlString = $('#resultsParagraph').html()
+	if (response == ""){
+		$('#resultsParagraph').html("(No tiles found.)");
+	}
+   else {
+	   $('#resultsParagraph').html(response);
+	}
+		   
+	var htmlString = $('#resultsParagraph').html()
+
+	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
+		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(true))) {
+			allUnzipped = Boolean(false);
+		}
+	} 	
+}
+
         
 function handleResponse(response)
 {
@@ -106,13 +126,33 @@ function handleResponse(response)
 
 	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
 		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(true))) {
-			alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.')
-			allUnzipped = Boolean(false);
+			if (prevhtmlString == "(No tiles found.)") {
+				alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.')
+				allUnzipped = Boolean(false);
+			}
+			
 		}
 	} 	
 }
 
 
+function initial_getResults()
+{    
+	// let author = $('#authorInput').val();
+	//author = encodeURIComponent(author);
+	// let url = '/searchresults?author=' + author;
+	let request = null;
+	let url = '/searchresults';
+	if (request != null)
+		request.abort();
+	request = $.ajax( {
+			type: "GET",
+			url: url,
+			success: initial_handleResponse, 
+
+		} );
+	setTimeout(getResults, 2000);
+}
          
 function getResults()
 {    
@@ -181,6 +221,7 @@ function classification_finished()
 			window.setTimeout(function() {
 				$body.removeClass('is-preload');
 			}, 10);
+			initial_getResults();
 		});
 /*
 	// Dropdowns.
