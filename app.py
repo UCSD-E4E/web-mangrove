@@ -77,8 +77,8 @@ server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-m_filename = 'mangrove'
-nm_filename = 'nonmangrove'
+m_filename = '0'
+nm_filename = '1'
 
 
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
@@ -329,86 +329,182 @@ def require_login():
 
 def get_fig(version, mngrv_geojson, n_mngrv_geojson):
 
-    if mngrv_geojson == None:
+    mangrove_exists = True
+    nonmangrove_exists = True
+
+    if mngrv_geojson == {}:
+        mangrove_exists = False
         mngrv_geojson = {'features': []}
-    if n_mngrv_geojson == None:
+    if n_mngrv_geojson == {}:
+        nonmangrove_exists = False
         n_mngrv_geojson = {'features': []}
 
-    
-    image_filename = "image_m_green.png"
-    if not path.exists(image_filename):
-        image_filename = "image_m_green-perm.png"
-    image_m_green = base64.b64encode(open(image_filename, 'rb').read())
+    print(mangrove_exists, nonmangrove_exists)
 
-    image_filename = "image_nm_red.png"
-    if not path.exists(image_filename):
-        image_filename = "image_nm_red-perm.png"
-    image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
+    if mangrove_exists:
+        image_filename = "image_m_green.png"
+        if not path.exists(image_filename):
+            image_filename = "image_m_green-perm.png"
+        image_m_green = base64.b64encode(open(image_filename, 'rb').read())
 
-    if not path.exists(image_filename) and not path.exists(image_filename):
+    if nonmangrove_exists:
+        image_filename = "image_nm_red.png"
+        if not path.exists(image_filename):
+            image_filename = "image_nm_red-perm.png"
+        image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
+
+    '''if not path.exists(image_filename) and not path.exists(image_filename):
         sample = True
     else: 
-        sample = False
+        sample = False'''
 
-    mngrv_tiles = len(mngrv_geojson['features'])
-    n_mngrv_tiles = len(n_mngrv_geojson['features'])
+    if mangrove_exists:
+        mngrv_tiles = len(mngrv_geojson['features'])
+    if nonmangrove_exists:
+        n_mngrv_tiles = len(n_mngrv_geojson['features'])
 
-    sources = visualize.make_sources(mngrv_geojson) # dictionary to create the borders
+    # if only one exists 
+    if mangrove_exists and nonmangrove_exists:
+        haveborder = True
+    else: 
+        haveborder = False
+
+    if mangrove_exists:
+        sources = visualize.make_sources(mngrv_geojson) # dictionary to create the borders
+    elif nonmangrove_exists:
+        sources = visualize.make_sources(n_mngrv_geojson) # dictionary to create the borders
     print('got sources')
-    lons, lats = visualize.get_centers(mngrv_geojson) # lat lon of all the centers of the scatter plot (to mimic hover text effect)
+
+    hasScatter = True
+    if mangrove_exists:
+        lons, lats = visualize.get_centers(mngrv_geojson) # lat lon of all the centers of the scatter plot (to mimic hover text effect)
+        hasScatter = True
+    elif nonmangrove_exists:
+        lons, lats = visualize.get_centers(n_mngrv_geojson) # lat lon of all the centers of the scatter plot (to mimic hover text effect)
+        hasScatter = True
+    else:
+        hasScatter = False
+        lons, lats = [0], [0]
+
+    
     print('got lats lons')
-    latmin_m, latmax_m, lonmin_m, lonmax_m = visualize.get_latlonminmax(mngrv_geojson)
-    print('got min max lats lons')
-    latmin_nm, latmax_nm, lonmin_nm, lonmax_nm = visualize.get_latlonminmax(n_mngrv_geojson)
+    if mangrove_exists:
+        latmin_m, latmax_m, lonmin_m, lonmax_m = visualize.get_latlonminmax(mngrv_geojson)
+    if nonmangrove_exists:
+        print('got min max lats lons')
+        latmin_nm, latmax_nm, lonmin_nm, lonmax_nm = visualize.get_latlonminmax(n_mngrv_geojson)
+    if not mangrove_exists and not nonmangrove_exists:
+        latmin_m, latmax_m, lonmin_m, lonmax_m = (0, 0, 0, 0)
+
 
     avg_lon = np.average(lons)
     avg_lat = np.average(lats)
     # use a scatter map box to create the hover text
-    data = dict(type='scattermapbox',
-                lat=lats,
-                lon=lons,
-                opacity = 0,
-                mode='markers',
-                text='mangrove',
-                showlegend=False,
-                hoverinfo='text'
-                )
+    if hasScatter:
+        data = dict(type='scattermapbox',
+                    lat=lats,
+                    lon=lons,
+                    opacity = 0,
+                    mode='markers',
+                    text='mangrove',
+                    showlegend=False,
+                    hoverinfo='text'
+                    )
+    else:
+        data = {}
 
-    border = [dict(sourcetype = 'geojson',
-                source =sources[k],
-                below="",
-                type = 'line',    # the borders
-                line = dict(width = 2),
-                color = 'black',
-                ) for k in range(mngrv_tiles)
-            ]
-    mangrove = [dict(below ='',
-                        opacity=1,
-                    source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
-                    sourcetype= "image",
-                    coordinates =  [
-                            [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
-                                    ])]
-    non_mangrove = [dict(below ='',
-                        opacity=1,
-                    source = 'data:image/png;base64,{}'.format(image_nm_red.decode()),
-                    sourcetype= "image",
-                    coordinates =  [
-                            [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
-                                    ])]
+    if haveborder:
+        if mangrove_exists:
+            border = [dict(sourcetype = 'geojson',
+                    source =sources[k],
+                    below="",
+                    type = 'line',    # the borders
+                    line = dict(width = 2),
+                    color = 'black',
+                    ) for k in range(mngrv_tiles)
+                ]
+        elif nonmangrove_exists:
+            border = [dict(sourcetype = 'geojson',
+                    source =sources[k],
+                    below="",
+                    type = 'line',    # the borders
+                    line = dict(width = 2),
+                    color = 'black',
+                    ) for k in range(n_mngrv_tiles)
+                ]
+        else:
+            border = [{}]
+    else: 
+        border = {}
+
+    if mangrove_exists:
+        mangrove = [dict(below ='',
+                            opacity=1,
+                        source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
+                        sourcetype= "image",
+                        coordinates =  [
+                                [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                        ])]
+
+    if nonmangrove_exists:
+        non_mangrove = [dict(below ='',
+                            opacity=1,
+                        source = 'data:image/png;base64,{}'.format(image_nm_red.decode()),
+                        sourcetype= "image",
+                        coordinates =  [
+                                [lonmin_nm, latmax_nm], [lonmax_nm, latmax_nm], [lonmax_nm, latmin_nm], [lonmin_nm, latmin_nm]
+                                        ])]
     print('version:', version)
-    if len(version) == 0:
+
+    if len(version) == 0 and haveborder:
         layers=(border)
-    if len(version) == 1:
-        if (version[0] == 'mangrove'):
+    elif len(version) == 0 and not haveborder:
+        layers = ({})
+    elif len(version) == 1 and haveborder:
+        if (version[0] == 'mangrove') and mangrove_exists:
             layers=(border+mangrove)
+        elif (version[0] == 'mangrove') and not mangrove_exists:
+            layers=(border)
         # gotta add probability
         # elif (version[0] == 'non-mangrove'):
-        else:
+        elif (version[0] == 'non-mangrove') and nonmangrove_exists:
             layers=(border+non_mangrove)
+        elif (version[0] == 'non-mangrove') and not nonmangrove_exists:
+            layers=(border)
+        else:
+            layers=(border)
+    elif len(version) == 1 and not haveborder:
+        if (version[0] == 'mangrove') and mangrove_exists:
+            layers=(mangrove)
+        elif (version[0] == 'mangrove') and not mangrove_exists:
+            layers=({})
+        # gotta add probability
+        # elif (version[0] == 'non-mangrove'):
+        elif (version[0] == 'non-mangrove') and nonmangrove_exists:
+            layers=(non_mangrove)
+        elif (version[0] == 'non-mangrove') and not nonmangrove_exists:
+            layers=({})
+        else:
+            layers = ({})
     # everything
-    if len(version)==2:
-        layers=(border+mangrove+non_mangrove)
+    elif len(version) == 2 and haveborder:
+        if mangrove_exists and nonmangrove_exists:
+            layers=(border+mangrove+non_mangrove)
+        if mangrove_exists and not nonmangrove_exists:
+            layers=(border+mangrove)
+        if not mangrove_exists and nonmangrove_exists:
+            layers=(border+non_mangrove)
+        if not mangrove_exists and not nonmangrove_exists:
+            layers=(border)
+    elif len(version) == 2 and not haveborder:
+        if mangrove_exists and nonmangrove_exists:
+            layers=(mangrove+non_mangrove)
+        if mangrove_exists and not nonmangrove_exists:
+            layers=(mangrove)
+        if not mangrove_exists and nonmangrove_exists:
+            layers=(non_mangrove)
+        if not mangrove_exists and not nonmangrove_exists:
+            layers=({})
     # version =='prob'
 
     '''if sample:
@@ -499,7 +595,7 @@ start_dash()
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
 dash.dependencies.Input('radiobtn', 'value')])
 def update_figure(n_clicks, version):
-    print('version in app callback: ', version)
+    print('version in app callback: ', version) #  items checked in checkboxes. len: 0: nothing checked, 1: 1 item checked 2: 2 items checked. the values of the list are the values of items checked
     print('call back: ', dash.callback_context.triggered)
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     print(changed_id)
@@ -528,30 +624,36 @@ def update_figure(n_clicks, version):
             if path.exists(final_filename):
                 print("'mngrv.geojson' exists")
                 with open(final_filename) as f:
-                    mngrv_geojson = json.load(f)
+                    _mngrv_geojson = json.load(f)
         
             else:
                 print("'mngrv.geojson' does not exist yet")
-                mngrv_geojson = visualize.create_geojson(m_tif_filename, final_filename)
+                _mngrv_geojson = visualize.create_geojson(m_tif_filename, final_filename)
+        else: 
+            _mngrv_geojson={}
 
         if nonmangrove_exists:
             final_filename = 'n-mngrv.geojson'
             if path.exists(final_filename):
                 print("'n-mngrv.geojson' exists")
                 with open(final_filename) as f:
-                    n_mngrv_geojson = json.load(f)
+                    _n_mngrv_geojson = json.load(f)
         
             else:
                 print("'n-mngrv.geojson' does not exist yet")
-                n_mngrv_geojson = visualize.create_geojson(nm_tif_filename, final_filename)
+                _n_mngrv_geojson = visualize.create_geojson(nm_tif_filename, final_filename)
+        else: 
+            _n_mngrv_geojson={}
 
         # display the images
+        # DO SOME ELSE STATEMENT!
         if mangrove_exists:
             saved_img = "image_m_green.png"
             if not path.exists(saved_img):
                 image_m_green = visualize.get_im(m_tif_filename, green_hue)
                 image_m_green.save("image_m_green.png","PNG")
                 print("green m image saved")
+
 
         if nonmangrove_exists:
             saved_img = "image_nm_red.png"
@@ -564,14 +666,14 @@ def update_figure(n_clicks, version):
     else: 
         final_filename = 'mngrv-perm.geojson'
         with open(final_filename) as f:
-            mngrv_geojson = json.load(f)
+            _mngrv_geojson = json.load(f)
 
         # open the tif image and create geojson file
         final_filename = 'n-mngrv-perm.geojson'
         with open(final_filename) as f:
-            n_mngrv_geojson = json.load(f)
+            _n_mngrv_geojson = json.load(f)
 
-    dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
+    dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
     return dict_of_fig
 
 if __name__ == '__main__':

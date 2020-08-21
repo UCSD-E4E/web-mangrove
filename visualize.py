@@ -56,8 +56,7 @@ def make_sources(geojson):
 
     for feature in geojson_copy:
         sources.append(dict(type = 'FeatureCollection',
-                            features = [feature])
-                      )
+                            features = [feature]))
     return sources
 
 # return the bounds of the reassembled tif
