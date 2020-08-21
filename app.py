@@ -592,7 +592,7 @@ global n_mngrv_geojson
 
 start_dash()
 
-@app.callback([dash.dependencies.Output('viz', 'figure'), 
+'''@app.callback([dash.dependencies.Output('viz', 'figure'), 
 dash.dependencies.Output(component_id='view-mine', component_property='n_clicks'), 
 dash.dependencies.Output(component_id='view-sample', component_property='n_clicks')],
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
@@ -686,7 +686,92 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
 
     dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
     # return the figure to the graph and 0 to both the n_clicks of the buttons to reset them
-    return dict_of_fig, n_clicks_mine, n_clicks_sample
+    return dict_of_fig, n_clicks_mine, n_clicks_sample'''
+
+@app.callback(dash.dependencies.Output('viz', 'figure'),
+[dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
+dash.dependencies.Input('radiobtn', 'value')])
+def update_figure(n_clicks, version):
+    print('version in app callback: ', version) #  items checked in checkboxes. len: 0: nothing checked, 1: 1 item checked 2: 2 items checked. the values of the list are the values of items checked
+    print('call back: ', dash.callback_context.triggered)
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print(changed_id)
+    print('n_clicks', n_clicks)
+
+    # if you click the view my classification button, render the classfication
+    if (int(n_clicks)> 0):
+        print('directory: ', os.listdir())
+
+        nonmangrove_exists = False
+        mangrove_exists = False
+
+        m_tif_filename = m_filename+'.tif'
+        nm_tif_filename = nm_filename+'.tif'
+
+        
+        if (path.exists(m_tif_filename)):
+            mangrove_exists = True
+        
+        if (path.exists(nm_tif_filename)):
+            nonmangrove_exists = True
+
+
+        if mangrove_exists:
+            final_filename = 'mngrv.geojson'
+            if path.exists(final_filename):
+                print("'mngrv.geojson' exists")
+                with open(final_filename) as f:
+                    _mngrv_geojson = json.load(f)
+        
+            else:
+                print("'mngrv.geojson' does not exist yet")
+                _mngrv_geojson = visualize.create_geojson(m_tif_filename, final_filename)
+        else: 
+            _mngrv_geojson={}
+
+        if nonmangrove_exists:
+            final_filename = 'n-mngrv.geojson'
+            if path.exists(final_filename):
+                print("'n-mngrv.geojson' exists")
+                with open(final_filename) as f:
+                    _n_mngrv_geojson = json.load(f)
+        
+            else:
+                print("'n-mngrv.geojson' does not exist yet")
+                _n_mngrv_geojson = visualize.create_geojson(nm_tif_filename, final_filename)
+        else: 
+            _n_mngrv_geojson={}
+
+        # display the images
+        # DO SOME ELSE STATEMENT!
+        if mangrove_exists:
+            saved_img = "image_m_green.png"
+            if not path.exists(saved_img):
+                image_m_green = visualize.get_im(m_tif_filename, green_hue)
+                image_m_green.save("image_m_green.png","PNG")
+                print("green m image saved")
+
+
+        if nonmangrove_exists:
+            saved_img = "image_nm_red.png"
+            if not path.exists(saved_img):
+                image_nm_red = visualize.get_im(nm_tif_filename, red_hue)
+                image_nm_red.save("image_nm_red.png","PNG")
+                print("red nm image saved")
+
+    # FIX THIS            
+    else: 
+        final_filename = 'mngrv-perm.geojson'
+        with open(final_filename) as f:
+            _mngrv_geojson = json.load(f)
+
+        # open the tif image and create geojson file
+        final_filename = 'n-mngrv-perm.geojson'
+        with open(final_filename) as f:
+            _n_mngrv_geojson = json.load(f)
+
+    dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
+    return dict_of_fig
 
 if __name__ == '__main__':
     app.run_server(debug=False)
