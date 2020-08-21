@@ -154,27 +154,27 @@ def post_classify():
 
     nonmangrove_exists = False
     mangrove_exists = False
-    if (os.path.isdir(IMAGE_DIRECTORY + '/'+nm_filename+'/')):
+    if (os.path.isdir(IMAGE_DIRECTORY + '/1/')):
         nonmangrove_exists = True
     
-    if (os.path.isdir(IMAGE_DIRECTORY + '/'+m_filename+'/')):
+    if (os.path.isdir(IMAGE_DIRECTORY + '/0/')):
         mangrove_exists = True
 
     if nonmangrove_exists: 
-        nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/'+nm_filename+'/'))
-        nm_img_path = IMAGE_DIRECTORY + '/'+nm_filename+'/'
+        nm_img_list = list(os.listdir(IMAGE_DIRECTORY + '/1/'))
+        nm_img_path = IMAGE_DIRECTORY + '/1/'
         nm_img_list = prepend(nm_img_list, nm_img_path)
 
         raster.merge_raster(nm_img_list, output_file=MAIN_DIRECTORY+nm_filename+".tif")
         print('created ' + nm_filename+ '.tif')
         os.system('gdal_polygonize.py '+ nm_filename +'.tif -f "ESRI Shapefile" -b 4 ' + nm_filename+ '.shp')
         tif_to_jpg(MAIN_DIRECTORY + nm_filename+ ".tif")
-        delete_files_in_dir(IMAGE_DIRECTORY+'/'+ nm_filename+'/')
+        delete_files_in_dir(IMAGE_DIRECTORY+'/1/')
 
 
     if mangrove_exists: 
-        m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/'+m_filename+'/'))
-        m_img_path = IMAGE_DIRECTORY + '/'+m_filename+'/'
+        m_img_list = list(os.listdir(IMAGE_DIRECTORY + '/0/'))
+        m_img_path = IMAGE_DIRECTORY + '/0/'
         m_img_list = prepend(m_img_list, m_img_path)
 
         raster.merge_raster(m_img_list, output_file=MAIN_DIRECTORY+m_filename+".tif")
@@ -184,7 +184,7 @@ def post_classify():
         # store tif as jpg for visualization
         tif_to_jpg(MAIN_DIRECTORY + m_filename+".tif")
         # Delete files in images/images
-        delete_files_in_dir(IMAGE_DIRECTORY+'/'+ m_filename+'/')
+        delete_files_in_dir(IMAGE_DIRECTORY + '/0/')
 
     
     
