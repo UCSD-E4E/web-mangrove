@@ -108,6 +108,9 @@ function initial_handleResponse(response)
 	}
 		   
 	var htmlString = $('#resultsParagraph').html()
+	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
+		allUnzipped = Boolean(true);
+	} 	
 }
 
         
@@ -125,8 +128,8 @@ function handleResponse(response)
 
 	if ((htmlString !== "(None)") && (htmlString !== "(No tiles found.)")) {
 		if ((htmlString.length == prevhtmlString.length) && (allUnzipped==Boolean(false))) {
-				alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.');
-				allUnzipped = Boolean(true);
+			alert('Tiles are unzipped and ready for classification! View the tile names in the textbox and click classify to proceed.');
+			allUnzipped = Boolean(true);
 		}
 	} 	
 }

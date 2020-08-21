@@ -76,6 +76,11 @@ server = Flask(__name__)
 server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
+m_filename = 'mangrove'
+nm_filename = 'nonmangrove'
+
+
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
 
 from celery import Celery
@@ -309,7 +314,7 @@ def classify():
 
     # classify_celery.apply_async()
 
-    # classify_mod.classify()
+    classify_mod.classify()
     html = "Performing classification... "
     response = make_response(html)
     return response
@@ -503,39 +508,59 @@ def update_figure(n_clicks, version):
     # if you click the view my classification button, render the classfication
     if (int(n_clicks)> 0):
         print('directory: ', os.listdir())
-        # open the tif image and create geojson file
-        FILENAME = '0.tif'
-        final_filename = 'mngrv.geojson'
-        if path.exists(final_filename) and path.exists(FILENAME):
-            print("'mngrv.geojson' exists")
-            with open(final_filename) as f:
-                mngrv_geojson = json.load(f)
-        else:
-            print("'mngrv.geojson' does not exist yet")
-            mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
 
-        # open the tif image and create geojson file
-        FILENAME = '1.tif'
-        final_filename = 'n-mngrv.geojson'
-        if path.exists(final_filename):
-            with open(final_filename) as f:
-                n_mngrv_geojson = json.load(f)
-        else:
-            n_mngrv_geojson = visualize.create_geojson(FILENAME, final_filename)
+        nonmangrove_exists = False
+        mangrove_exists = False
 
-        FILENAME = '0.tif'
-        saved_img = "image_m_green.png"
-        if not path.exists(saved_img) and path.exists(FILENAME):
-            image_m_green = visualize.get_im(FILENAME, green_hue)
-            image_m_green.save("image_m_green.png","PNG")
-            print("green m image saved")
+        m_tif_filename = m_filename+'.tif'
+        nm_tif_filename = nm_filename+'.tif'
 
-        FILENAME = '1.tif'
-        saved_img = "image_nm_red.png"
-        if not path.exists(saved_img) and path.exists(FILENAME):
-            image_nm_red = visualize.get_im(FILENAME, red_hue)
-            image_nm_red.save("image_nm_red.png","PNG")
-            print("red nm image saved")
+        
+        if (path.exists(m_tif_filename)):
+            mangrove_exists = True
+        
+        if (path.exists(nm_tif_filename)):
+            nonmangrove_exists = True
+
+
+        if mangrove_exists:
+            final_filename = 'mngrv.geojson'
+            if path.exists(final_filename):
+                print("'mngrv.geojson' exists")
+                with open(final_filename) as f:
+                    mngrv_geojson = json.load(f)
+        
+            else:
+                print("'mngrv.geojson' does not exist yet")
+                mngrv_geojson = visualize.create_geojson(m_tif_filename, final_filename)
+
+        if nonmangrove_exists:
+            final_filename = 'n-mngrv.geojson'
+            if path.exists(final_filename):
+                print("'n-mngrv.geojson' exists")
+                with open(final_filename) as f:
+                    n_mngrv_geojson = json.load(f)
+        
+            else:
+                print("'n-mngrv.geojson' does not exist yet")
+                n_mngrv_geojson = visualize.create_geojson(nm_tif_filename, final_filename)
+
+        # display the images
+        if mangrove_exists:
+            saved_img = "image_m_green.png"
+            if not path.exists(saved_img):
+                image_m_green = visualize.get_im(m_tif_filename, green_hue)
+                image_m_green.save("image_m_green.png","PNG")
+                print("green m image saved")
+
+        if nonmangrove_exists:
+            saved_img = "image_nm_red.png"
+            if not path.exists(saved_img):
+                image_nm_red = visualize.get_im(nm_tif_filename, red_hue)
+                image_nm_red.save("image_nm_red.png","PNG")
+                print("red nm image saved")
+
+    # FIX THIS            
     else: 
         final_filename = 'mngrv-perm.geojson'
         with open(final_filename) as f:
