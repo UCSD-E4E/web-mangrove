@@ -312,9 +312,9 @@ def prep_classification():
 def classify():
     print('in classify')
 
-    # classify_celery.apply_async()
+    classify_celery.apply_async()
 
-    classify_mod.classify()
+    # classify_mod.classify()
     html = "Performing classification... "
     response = make_response(html)
     return response
@@ -592,24 +592,21 @@ global n_mngrv_geojson
 
 start_dash()
 
-@app.callback(dash.dependencies.Output('viz', 'figure'),
-[dash.dependencies.Input(component_id='view-sample', component_property='n_clicks'), 
-dash.dependencies.Input('radiobtn', 'value')])
-def generate_sample(n_clicks, version):
-
-
-@app.callback(dash.dependencies.Output('viz', 'figure'),
+@app.callback([dash.dependencies.Output('viz', 'figure'), 
+dash.dependencies.Output(component_id='view-mine', component_property='n_clicks'), 
+dash.dependencies.Output(component_id='view-sample', component_property='n_clicks')],
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
+dash.dependencies.Input(component_id='view-sample', component_property='n_clicks'), 
 dash.dependencies.Input('radiobtn', 'value')])
-def update_figure(n_clicks, version):
+def update_figure(n_clicks_mine, n_clicks_sample, version):
     print('version in app callback: ', version) #  items checked in checkboxes. len: 0: nothing checked, 1: 1 item checked 2: 2 items checked. the values of the list are the values of items checked
     print('call back: ', dash.callback_context.triggered)
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     print(changed_id)
-    print('n_clicks', n_clicks)
+    print('n_clicks', n_clicks_mine)
 
     # if you click the view my classification button, render the classfication
-    if (int(n_clicks)> 0):
+    if (int(n_clicks_mine)> 0):
         print('directory: ', os.listdir())
 
         nonmangrove_exists = False
@@ -669,7 +666,10 @@ def update_figure(n_clicks, version):
                 image_nm_red.save("image_nm_red.png","PNG")
                 print("red nm image saved")
 
-    # FIX THIS            
+    #elif (int(n_clicks_sample)> 0):
+
+    # FIX THIS  
+    # # neither button is clicked           
     else: 
         final_filename = 'mngrv-perm.geojson'
         with open(final_filename) as f:
@@ -679,9 +679,14 @@ def update_figure(n_clicks, version):
         final_filename = 'n-mngrv-perm.geojson'
         with open(final_filename) as f:
             _n_mngrv_geojson = json.load(f)
+    
+
+
+    
 
     dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
-    return dict_of_fig
+    # return the figure to the graph and 0 to both the n_clicks of the buttons to reset them
+    return dict_of_fig, n_clicks_mine, n_clicks_sample
 
 if __name__ == '__main__':
     app.run_server(debug=False)
