@@ -77,8 +77,8 @@ server.config['SECRET_KEY'] = "it is a secret" # old code idk if I need this
 server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-m_filename = '0'
-nm_filename = '1'
+m_filename = 'mangrove'
+nm_filename = 'nonmangrove'
 
 
 CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
@@ -145,7 +145,7 @@ def login():
 @server.route('/download', methods=['GET'])
 def download():
 
-    filelist= list(['0.prj', '1.prj', '0.tif', '1.tif', '0.shx', '1.shx', '0.shp', '1.shp', '1.dbf', '0.dbf'])
+    filelist= list([m_filename+'.prj', nm_filename+'.prj', m_filename+'.tif', nm_filename+'.tif', m_filename+'.shx', nm_filename+'.shx', m_filename+'.shp', nm_filename+'.shp', nm_filename+'.dbf', m_filename+'.dbf'])
     filename = 'all.zip'
     createZip(filename, filelist)
     # Delete all the files uploaded + created 
@@ -276,16 +276,16 @@ def createZip(zip_name, filelist, delete=False):
 @server.route('/download_m', methods=['GET'])
 def download_m():
 
-    filelist=['1.dbf', '1.prj', '1.shp', '1.shx', '1.tif']
-    filename = '1.zip'
+    filelist=[m_filename+'.dbf', m_filename+'.prj', m_filename+'.shp', m_filename+'.shx', m_filename+'.tif']
+    filename = m_filename+'.zip'
     createZip(filename, filelist)
     return redirect(url_for('uploaded_file', filename=filename))
 
 @server.route('/download_nm', methods=['GET'])
 def download_nm():
 
-    filelist=['0.dbf', '0.prj', '0.shp', '0.shx', '0.tif']
-    filename = '0.zip'
+    filelist=[nm_filename+'.dbf', nm_filename+'.prj', nm_filename+'.shp', nm_filename+'.shx', nm_filename+'.tif']
+    filename = nm_filename+'.zip'
     createZip(filename, filelist)
     return redirect(url_for('uploaded_file', filename=filename))
 
@@ -568,7 +568,8 @@ def start_dash():
     if mngrv_geojson != None and n_mngrv_geojson != None:
         dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
 
-        app.layout = html.Div([html.Button('Update', id='view-mine', n_clicks=0), 
+        app.layout = html.Div([html.Button('View Sample', id='view-sample', n_clicks=0), 
+            html.Button('Update', id='view-mine', n_clicks=0), 
             dcc.Checklist(inputStyle={'-webkit-appearance': 'checkbox'}, id='radiobtn', 
             options=[
                 {'label': 'Mangrove', 'value': 'mangrove'},
@@ -590,6 +591,12 @@ global mngrv_geojson
 global n_mngrv_geojson
 
 start_dash()
+
+@app.callback(dash.dependencies.Output('viz', 'figure'),
+[dash.dependencies.Input(component_id='view-sample', component_property='n_clicks'), 
+dash.dependencies.Input('radiobtn', 'value')])
+def generate_sample(n_clicks, version):
+
 
 @app.callback(dash.dependencies.Output('viz', 'figure'),
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
