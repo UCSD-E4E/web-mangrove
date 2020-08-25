@@ -202,8 +202,11 @@ def post_classify():
 
     
     # fix shape files
-    fix_shp(m_filename+'.shp')
-    fix_shp(nm_filename+'.shp')
+
+    if mangrove_exists:
+        fix_shp(m_filename+'.shp')
+    if nonmangrove_exists:
+        fix_shp(nm_filename+'.shp')
 
     delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
 
