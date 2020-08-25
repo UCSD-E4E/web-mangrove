@@ -11,6 +11,7 @@ from PIL import Image
 from urllib.request import urlopen
 import time
 from flask import jsonify
+import geopandas
 
 import shutil
 import requests
@@ -46,6 +47,19 @@ def prepend(list, str):
     str += '{0}'
     list = [str.format(i) for i in list] 
     return(list) 
+
+
+# edited version of gis utils shp function (this one also renoralizes the values in the geopandas df)
+#function for fixing shapefiles to only create polygons around the the specified class
+def fix_shp(filename):
+    shp = geopandas.read_file(filename)
+    for index, feature in tqdm(shp.iterrows()):
+      if feature["DN"] == 0:
+          shp.drop(index, inplace=True)
+    # scale the shape file
+    shp['DN'] = pd.to_numeric(shp['DN']/255, downcast='integer')
+    shp.to_file(filename)
+    return shp
 
 #Since the original model outputs the values from the last dense layer (no final activation), we need to definte the sigmoid function for predicted class conditional probabilities
 def sigmoid(x):
@@ -187,7 +201,10 @@ def post_classify():
         delete_files_in_dir(IMAGE_DIRECTORY + '/0/')
 
     
-    
+    # fix shape files
+    fix_shp(m_filename+'.shp')
+    fix_shp(nm_filename+'.shp')
+
     delete_files_in_dir(IMAGE_DIRECTORY+'/images/')
 
     # Delete the files in the blob containers 

@@ -312,9 +312,9 @@ def prep_classification():
 def classify():
     print('in classify')
 
-    classify_celery.apply_async() # run on heroku
+    # classify_celery.apply_async() # run on heroku
 
-    # classify_mod.classify() # run locally 
+    classify_mod.classify() # run locally 
     html = "Performing classification... "
     response = make_response(html)
     return response
