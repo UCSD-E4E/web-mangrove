@@ -312,9 +312,9 @@ def prep_classification():
 def classify():
     print('in classify')
 
-    classify_celery.apply_async()
+    classify_celery.apply_async() # run on heroku
 
-    # classify_mod.classify()
+    # classify_mod.classify() # run locally 
     html = "Performing classification... "
     response = make_response(html)
     return response
@@ -327,36 +327,34 @@ def require_login():
         return redirect('/login')
 '''
 
-def get_fig(version, mngrv_geojson, n_mngrv_geojson):
+def get_fig(version, mngrv_geojson, n_mngrv_geojson, sample=False):
 
     mangrove_exists = True
     nonmangrove_exists = True
 
     if mngrv_geojson == {}:
         mangrove_exists = False
-        mngrv_geojson = {'features': []}
+        mngrv_geojson = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[0, 0]]}}]}
     if n_mngrv_geojson == {}:
         nonmangrove_exists = False
-        n_mngrv_geojson = {'features': []}
+        n_mngrv_geojson = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[0, 0]]}}]}
 
-    print(mangrove_exists, nonmangrove_exists)
 
-    if mangrove_exists:
-        image_filename = "image_m_green.png"
-        if not path.exists(image_filename):
-            image_filename = "image_m_green-perm.png"
+    if sample:
+        image_filename = "image_m_green-perm.png"
         image_m_green = base64.b64encode(open(image_filename, 'rb').read())
 
-    if nonmangrove_exists:
-        image_filename = "image_nm_red.png"
-        if not path.exists(image_filename):
-            image_filename = "image_nm_red-perm.png"
+        image_filename = "image_nm_red-perm.png"
         image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
-
-    '''if not path.exists(image_filename) and not path.exists(image_filename):
-        sample = True
     else: 
-        sample = False'''
+        if mangrove_exists:
+            image_filename = "image_m_green.png"
+            image_m_green = base64.b64encode(open(image_filename, 'rb').read())
+
+        if nonmangrove_exists:
+            image_filename = "image_nm_red.png"
+            image_nm_red = base64.b64encode(open(image_filename, 'rb').read())
+
 
     if mangrove_exists:
         mngrv_tiles = len(mngrv_geojson['features'])
@@ -411,7 +409,15 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
                     hoverinfo='text'
                     )
     else:
-        data = {}
+        data = dict(type='scattermapbox',
+                    lat=[0],
+                    lon=[0],
+                    opacity = 0,
+                    mode='markers',
+                    text='mangrove',
+                    showlegend=False,
+                    hoverinfo='text'
+                    )
 
     if haveborder:
         if mangrove_exists:
@@ -444,6 +450,14 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
                         sourcetype= "image",
                         coordinates =  [
                                 [lonmin_m, latmax_m], [lonmax_m, latmax_m], [lonmax_m, latmin_m], [lonmin_m, latmin_m]
+                                        ])]
+    else: 
+        mangrove = [dict(below ='',
+                            opacity=1,
+                        # source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
+                        # sourcetype= "image",
+                        coordinates =  [
+                                [0, 0], [0, 0], [0, 0], [0, 0]
                                         ])]
 
     if nonmangrove_exists:
@@ -505,6 +519,15 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
             layers=(non_mangrove)
         if not mangrove_exists and not nonmangrove_exists:
             layers=({})
+
+    if layers == ({}):
+        layers = ([dict(below ='',
+                            opacity=1,
+                        # source = 'data:image/png;base64,{}'.format(image_m_green.decode()),
+                        # sourcetype= "image",
+                        coordinates =  [
+                                [0, 0], [0, 0], [0, 0], [0, 0]
+                                        ])])
     # version =='prob'
 
     '''if sample:
@@ -530,30 +553,85 @@ def get_fig(version, mngrv_geojson, n_mngrv_geojson):
                             )
                 )'''
 
-    layout = dict(
-                autosize=False,
-                width=1400,
-                height=800,
-                margin={'t': 0, 'l':0, 'r':0, 'b':0},
-                hovermode='closest',
-                hoverdistance = 30,
-                mapbox=dict(accesstoken=MAPBOX_APIKEY,
-                            layers=layers,
-                            bearing=0,
-                            center=dict(
-                                        lat=avg_lat,  # the center of this regions
-                                        lon=avg_lon),
-                            pitch=0,
-                            zoom=16,
-                            style = 'mapbox://styles/mapbox/satellite-v8'
-
-                            )
-                )
+    if mangrove_exists or nonmangrove_exists:
+        zoom = 16
+        layout = dict(
+                    autosize=False,
+                    width=1400,
+                    height=800,
+                    margin={'t': 0, 'l':0, 'r':0, 'b':0},
+                    hovermode='closest',
+                    hoverdistance = 30,
+                    mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                                layers=layers,
+                                bearing=0,
+                                center=dict(
+                                            lat=avg_lat,  # the center of this regions
+                                            lon=avg_lon),
+                                pitch=0,
+                                zoom=zoom, 
+                                # style = 'mapbox://styles/mapbox/satellite-v8'
+                                style = 'mapbox://styles/mapbox/streets-v11'
+                                )
+                    )
+    else:
+        zoom = 2
+        layout = dict(
+                    autosize=False,
+                    width=1400,
+                    height=800,
+                    margin={'t': 0, 'l':0, 'r':0, 'b':0},
+                    hovermode='closest',
+                    hoverdistance = 30,
+                    mapbox=dict(accesstoken=MAPBOX_APIKEY,
+                                layers=[],
+                                bearing=0,
+                                center=dict(
+                                            lat=0,  # the center of this regions
+                                            lon=0),
+                                pitch=0,
+                                zoom=zoom, 
+                                style = 'mapbox://styles/mapbox/streets-v11'
+                                )
+                    )
+        
 
     dict_of_fig = dict(data=[data], layout=layout)
     return dict_of_fig
 
 def start_dash():
+    # open the permanent tif image and create geojson file
+    '''final_filename = 'mngrv-perm.geojson'
+    with open(final_filename) as f:
+        mngrv_geojson = json.load(f)
+
+    # open the tif image and create geojson file
+    final_filename = 'n-mngrv-perm.geojson'
+    with open(final_filename) as f:
+        n_mngrv_geojson = json.load(f)'''
+
+    mngrv_geojson = {}
+    n_mngrv_geojson = {}
+    
+    version = ['mangrove', 'non-mangrove']
+    dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
+
+    app.layout = html.Div([html.Button('View Sample', id='view-sample', n_clicks=0), 
+        html.Button('Update', id='view-mine', n_clicks=0), 
+        dcc.Checklist(inputStyle={'-webkit-appearance': 'checkbox'}, id='radiobtn', 
+        options=[
+            {'label': 'Mangrove', 'value': 'mangrove'},
+            {'label': 'Non-Mangrove', 'value': 'non-mangrove'},
+            # {'label': 'Everything', 'value': 'everything'},
+            # {'label': 'Probability', 'value': 'prob'}
+        ],
+        value=['mangrove', 'non-mangrove'], 
+        labelStyle={'display': 'inline-block', 'textAlign': 'center', 'cursor': 'pointer'})  , 
+        dcc.Graph(id='viz', figure=dict_of_fig)
+        ])
+    return
+
+def start_dash_prev():
     # open the permanent tif image and create geojson file
     final_filename = 'mngrv-perm.geojson'
     with open(final_filename) as f:
@@ -592,21 +670,58 @@ global n_mngrv_geojson
 
 start_dash()
 
-'''@app.callback([dash.dependencies.Output('viz', 'figure'), 
-dash.dependencies.Output(component_id='view-mine', component_property='n_clicks'), 
-dash.dependencies.Output(component_id='view-sample', component_property='n_clicks')],
+'''@app.callback(dash.dependencies.Output(component_id='view-mine', component_property='n_clicks'),
+             [dash.dependencies.Input(component_id='view-sample', component_property='n_clicks')])
+def update_mine(reset):
+    print('reset', reset)
+    if reset > 0 :
+        return 0
+    else: 
+        return reset
+
+
+@app.callback(dash.dependencies.Output(component_id='view-sample', component_property='n_clicks'),
+             [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks')])
+def update_sample(reset):
+    print('reset', reset)
+    if reset > 0 :
+        return 0
+    else: 
+        return reset
+'''
+
+@app.callback(dash.dependencies.Output('viz', 'figure'),
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
 dash.dependencies.Input(component_id='view-sample', component_property='n_clicks'), 
 dash.dependencies.Input('radiobtn', 'value')])
 def update_figure(n_clicks_mine, n_clicks_sample, version):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print('callback context: ', dash.callback_context.triggered)
     print('version in app callback: ', version) #  items checked in checkboxes. len: 0: nothing checked, 1: 1 item checked 2: 2 items checked. the values of the list are the values of items checked
     print('call back: ', dash.callback_context.triggered)
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     print(changed_id)
-    print('n_clicks', n_clicks_mine)
+    print('n_clicks mine', n_clicks_mine)
+    print('n_clicks sample', n_clicks_sample)
 
-    # if you click the view my classification button, render the classfication
-    if (int(n_clicks_mine)> 0):
+    # generate sample
+    sample = False
+
+    # if View Sample is the most recently clicked button 
+    if (changed_id == 'view-sample.n_clicks'):
+        final_filename = 'mngrv-perm.geojson'
+        with open(final_filename) as f:
+            _mngrv_geojson = json.load(f)
+
+        # open the tif image and create geojson file
+        final_filename = 'n-mngrv-perm.geojson'
+        with open(final_filename) as f:
+            _n_mngrv_geojson = json.load(f)
+
+        sample = True
+
+    # if 'update' is the most recent button clicked, render the classfication
+    elif (changed_id == 'view-mine.n_clicks'):
         print('directory: ', os.listdir())
 
         nonmangrove_exists = False
@@ -665,29 +780,20 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
                 image_nm_red = visualize.get_im(nm_tif_filename, red_hue)
                 image_nm_red.save("image_nm_red.png","PNG")
                 print("red nm image saved")
+            print('hi here')
+        # n_clicks_mine = 0 # reset the btn
 
-    #elif (int(n_clicks_sample)> 0):
-
-    # FIX THIS  
     # # neither button is clicked           
     else: 
-        final_filename = 'mngrv-perm.geojson'
-        with open(final_filename) as f:
-            _mngrv_geojson = json.load(f)
-
-        # open the tif image and create geojson file
-        final_filename = 'n-mngrv-perm.geojson'
-        with open(final_filename) as f:
-            _n_mngrv_geojson = json.load(f)
+        _mngrv_geojson = {}
+        _n_mngrv_geojson = {}
     
 
+    dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson, sample=sample)
+    # return the figure to the graph and n_clicks to both the n_clicks of the buttons to reset them
+    return dict_of_fig
 
-    
-
-    dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
-    # return the figure to the graph and 0 to both the n_clicks of the buttons to reset them
-    return dict_of_fig, n_clicks_mine, n_clicks_sample'''
-
+'''
 @app.callback(dash.dependencies.Output('viz', 'figure'),
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
 dash.dependencies.Input('radiobtn', 'value')])
@@ -761,17 +867,13 @@ def update_figure(n_clicks, version):
 
     # FIX THIS            
     else: 
-        final_filename = 'mngrv-perm.geojson'
-        with open(final_filename) as f:
-            _mngrv_geojson = json.load(f)
-
-        # open the tif image and create geojson file
-        final_filename = 'n-mngrv-perm.geojson'
-        with open(final_filename) as f:
-            _n_mngrv_geojson = json.load(f)
+        _mngrv_geojson = {}
+        _n_mngrv_geojson = {}
 
     dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson)
+    print(dict_of_fig)
     return dict_of_fig
+'''
 
 if __name__ == '__main__':
     app.run_server(debug=False)
