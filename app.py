@@ -612,7 +612,7 @@ def start_dash():
 
     mngrv_geojson = {}
     n_mngrv_geojson = {}
-    
+
     version = ['mangrove', 'non-mangrove']
     dict_of_fig = get_fig(version, mngrv_geojson, n_mngrv_geojson)
 
@@ -657,38 +657,16 @@ def start_dash_prev():
             ],
             value=['mangrove', 'non-mangrove'], 
             labelStyle={'display': 'inline-block', 'textAlign': 'center', 'cursor': 'pointer'})  , 
-            dcc.Graph(id='viz', figure=dict_of_fig)
+            dcc.Graph(id='viz', figure=dict_of_fig), 
+            # Hidden div inside the app that stores the intermediate value
+            html.Div(id='intermediate-value', style={'display': 'none'}),
             ])
     return
 
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/')
-
-global mngrv_geojson
-global n_mngrv_geojson
+app = dash.Dash(__name__, server=server, routes_pathname_prefix='/visualization/', show_undo_redo=True)
 
 start_dash()
 
-'''@app.callback(dash.dependencies.Output(component_id='view-mine', component_property='n_clicks'),
-             [dash.dependencies.Input(component_id='view-sample', component_property='n_clicks')])
-def update_mine(reset):
-    print('reset', reset)
-    if reset > 0 :
-        return 0
-    else: 
-        return reset
-
-
-@app.callback(dash.dependencies.Output(component_id='view-sample', component_property='n_clicks'),
-             [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks')])
-def update_sample(reset):
-    print('reset', reset)
-    if reset > 0 :
-        return 0
-    else: 
-        return reset
-'''
 
 @app.callback(dash.dependencies.Output('viz', 'figure'),
 [dash.dependencies.Input(component_id='view-mine', component_property='n_clicks'), 
@@ -698,8 +676,12 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     print('callback context: ', dash.callback_context.triggered)
     print('version in app callback: ', version) #  items checked in checkboxes. len: 0: nothing checked, 1: 1 item checked 2: 2 items checked. the values of the list are the values of items checked
-    print('call back: ', dash.callback_context.triggered)
+    print('call back: ', dash.callback_context)
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if changed_id == 'view-sample.n_clicks' or changed_id == 'view-mine.n_clicks':
+        btn_changed_id = changed_id
+    else: 
+        btn_changed_id = ''
     print(changed_id)
     print('n_clicks mine', n_clicks_mine)
     print('n_clicks sample', n_clicks_sample)
@@ -708,7 +690,7 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
     sample = False
 
     # if View Sample is the most recently clicked button 
-    if (changed_id == 'view-sample.n_clicks'):
+    if (btn_changed_id == 'view-sample.n_clicks'):
         final_filename = 'mngrv-perm.geojson'
         with open(final_filename) as f:
             _mngrv_geojson = json.load(f)
@@ -721,7 +703,7 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
         sample = True
 
     # if 'update' is the most recent button clicked, render the classfication
-    elif (changed_id == 'view-mine.n_clicks'):
+    elif (btn_changed_id == 'view-mine.n_clicks'):
         print('directory: ', os.listdir())
 
         nonmangrove_exists = False
@@ -783,10 +765,10 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
             print('hi here')
         # n_clicks_mine = 0 # reset the btn
 
-    # # neither button is clicked           
+    '''    # # neither button is clicked           
     else: 
         _mngrv_geojson = {}
-        _n_mngrv_geojson = {}
+        _n_mngrv_geojson = {}'''
     
 
     dict_of_fig = get_fig(version, _mngrv_geojson, _n_mngrv_geojson, sample=sample)
