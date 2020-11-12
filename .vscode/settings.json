@@ -29,5 +29,6 @@
         "env.bak{,/**}",
         "venv.bak{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "python.pythonPath": "venv/bin/python"
 }
