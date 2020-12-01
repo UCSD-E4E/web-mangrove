@@ -22,6 +22,9 @@ import azure_blob
 import gc
 
 from tensorflow.keras.models import load_model
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
 
 PIL.Image.MAX_IMAGE_PIXELS = None
 
@@ -36,9 +39,8 @@ nm_filename = 'nonmangrove'
 
 
 account = 'mangroveclassifier'   # Azure account name
-key = 's0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw=='      # Azure Storage account access key  
 CONTAINER_NAME = 'mvnmv4-merced' # Container name
-CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
+CONNECTION_STRING = os.getenv('CONNECTION_STRING')
 MODEL_CONTAINER_NAME = 'mvnmv4-merced' # Container name
 
 # add str to the begining of every element in list

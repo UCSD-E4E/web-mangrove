@@ -3,8 +3,7 @@ import string, random, requests
 import flash
 from zipfile import ZipFile
 
-
-from celery import Celery
+from celery import Celery, Task
 
 import os
 from os import path
@@ -40,6 +39,11 @@ PIL.Image.MAX_IMAGE_PIXELS = None
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)
+
 
 # color the pics in visualization
 green_hue = (180-78)/360.0
@@ -81,15 +85,13 @@ m_filename = 'mangrove'
 nm_filename = 'nonmangrove'
 
 
-CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=mangroveclassifier;AccountKey=s0T0RoyfFVb/Efc+e/s1odYn2YuqmspSxwRW/c5IrQcH5gi/FpHgVYpAinDudDQuXdMFgrha38b0niW6pHzIFw==;EndpointSuffix=core.windows.net'
-
-from celery import Celery
+CONNECTION_STRING = os.getenv('CONNECTION_STRING')
 
 def make_celery(app):
     celery = Celery(server.name, broker=server.config['CELERY_BROKER_URL'])
     celery.conf.update(server.config)
 
-    TaskBase = celery.Task
+    TaskBase = Task
     class ContextTask(TaskBase):
         abstract = True
         def __call__(self, *args, **kwargs):
@@ -312,9 +314,9 @@ def prep_classification():
 def classify():
     print('in classify')
 
-    classify_celery.apply_async() # run on heroku
+    # classify_celery.apply_async() # run on heroku
 
-    # classify_mod.classify() # run locally 
+    classify_mod.classify() # run locally 
     html = "Performing classification... "
     response = make_response(html)
     return response
@@ -688,6 +690,9 @@ def update_figure(n_clicks_mine, n_clicks_sample, version):
 
     # generate sample
     sample = False
+
+    _mngrv_geojson = None
+    _n_mngrv_geojson = None
 
     # if View Sample is the most recently clicked button 
     if (btn_changed_id == 'view-sample.n_clicks'):
