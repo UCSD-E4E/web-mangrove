@@ -1,7 +1,8 @@
 import os
-import io
+from io import BytesIO
 import zipfile
 import json
+from time import time
 from flask import Blueprint, request, Response
 
 from . import constants
@@ -9,7 +10,7 @@ from . import constants
 bp = Blueprint('fileutils', __name__, url_prefix='/files')
 
 @bp.route('', methods=('GET', 'POST'))
-def process_files():
+def get_files():
     if not os.path.exists(constants.UPLOADED_FOLDER):
         os.makedirs(constants.UPLOADED_FOLDER)
     if not os.path.exists(constants.PROCESSED_FOLDER):
@@ -23,11 +24,15 @@ def process_files():
         files = request.data
         content_type = request.mimetype
         if content_type == 'application/zip':
-            with zipfile.ZipFile(io.BytesIO(files), 'r') as zip_ref:
+            with zipfile.ZipFile(BytesIO(files), 'r') as zip_ref:
                 zip_ref.extractall(constants.UPLOADED_FOLDER)
             return 'Done Uploading!'
         elif content_type == 'image/tiff':
-            with open(os.path.join(constants.UPLOADED_FOLDER, 'image.tif'), 'wb') as tif:
+            filename = 'image-' + str(round(time() * 1000))  + '.tif'
+            query_filename = request.args.get('filename')
+            if query_filename is not None:
+                filename = query_filename
+            with open(os.path.join(constants.UPLOADED_FOLDER, filename), 'wb') as tif:
                 tif.write(files)
             return 'Done Uploading!'
         else:
