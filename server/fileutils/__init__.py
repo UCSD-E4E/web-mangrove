@@ -4,6 +4,7 @@ import zipfile
 import json
 from time import time
 from flask import Blueprint, request, Response
+from ..retile import retile
 
 from . import constants
 
@@ -23,14 +24,26 @@ def upload_files():
     if content_type == 'application/zip':
         with zipfile.ZipFile(BytesIO(files), 'r') as zip_ref:
             zip_ref.extractall(constants.UPLOADED_FOLDER)
+
+        # Retiling
+        for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
+            for filename in filenames:
+                retile(os.path.join(dirpath, filename), os.path.join(constants.PROCESSED_FOLDER, filename))
+
         return 'Done Uploading!'
     elif content_type == 'image/tiff':
         filename = 'image-' + str(round(time() * 1000))  + '.tif'
         query_filename = request.args.get('filename')
         if query_filename is not None:
             filename = query_filename
-        with open(os.path.join(constants.UPLOADED_FOLDER, filename), 'wb') as tif:
+        uploaded_path = os.path.join(constants.UPLOADED_FOLDER, filename)
+        processed_path = os.path.join(constants.PROCESSED_FOLDER, filename.split('.')[0])
+        with open(uploaded_path, 'wb') as tif:
             tif.write(files)
+
+        # Retiling
+        retile(uploaded_path, processed_path)
+
         return 'Done Uploading!'
     else:
         return Response(json.dumps({
@@ -43,5 +56,5 @@ def list_files():
     create_folders()
     files = []
     for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
-        files.extend(os.path.join(dirpath, file) for file in filenames)
+        files.extend(os.path.join(dirpath, filename) for filename in filenames)
     return Response(json.dumps(files), mimetype='application/json')
