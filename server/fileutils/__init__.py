@@ -33,7 +33,7 @@ def process_files():
         else:
             return Response(json.dumps({
                 'message': 'Content-Type invalid. Only .zip and .tif files are supported.',
-                'status': '400'
+                'status': 400,
             }), status=400, mimetype='application/json')
 
     return 'Hello World!'
