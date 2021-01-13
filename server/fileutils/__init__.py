@@ -4,7 +4,6 @@ import zipfile
 import json
 from time import time
 from flask import Blueprint, request, Response
-from ..retile import retile
 
 from . import constants
 
@@ -25,11 +24,6 @@ def upload_files():
         with zipfile.ZipFile(BytesIO(files), 'r') as zip_ref:
             zip_ref.extractall(constants.UPLOADED_FOLDER)
 
-        # Retiling
-        for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
-            for filename in filenames:
-                retile(os.path.join(dirpath, filename), os.path.join(constants.PROCESSED_FOLDER, filename))
-
         return 'Done Uploading!'
     elif content_type == 'image/tiff':
         filename = 'image-' + str(round(time() * 1000))  + '.tif'
@@ -37,12 +31,8 @@ def upload_files():
         if query_filename is not None:
             filename = query_filename
         uploaded_path = os.path.join(constants.UPLOADED_FOLDER, filename)
-        processed_path = os.path.join(constants.PROCESSED_FOLDER, filename.split('.')[0])
         with open(uploaded_path, 'wb') as tif:
             tif.write(files)
-
-        # Retiling
-        retile(uploaded_path, processed_path)
 
         return 'Done Uploading!'
     else:
@@ -50,6 +40,15 @@ def upload_files():
             'message': 'Content-Type invalid. Only .zip and .tif files are supported.',
             'status': 400,
         }), status=400, mimetype='application/json')
+
+@bp.route('retile', methods=['POST'])
+def retile_files():
+    create_folders()
+    for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
+        for filename in filenames:
+            os.system('gdal2tiles.py ' + os.path.join(dirpath, filename) + ' ' + os.path.join(constants.PROCESSED_FOLDER, filename))
+    print(sum(1 for files in os.walk(constants.UPLOADED_FOLDER) for _ in files[2]))
+    return 'Done Retiling!'
 
 @bp.route('list', methods=['GET'])
 def list_files():
