@@ -6,6 +6,7 @@ from time import time
 from flask import Blueprint, request, Response
 
 from . import constants
+from .. import socketio
 
 bp = Blueprint('fileutils', __name__, url_prefix='/files')
 
@@ -44,10 +45,23 @@ def upload_files():
 @bp.route('retile', methods=['POST'])
 def retile_files():
     create_folders()
+    total_files = sum(1 for files in os.walk(constants.UPLOADED_FOLDER) for _ in files[2])
+    files_counter = 0
+    content_type = request.mimetype
+    room = None
+    if content_type == 'application/json':
+        data = request.get_json()
+        if 'room' not in data:
+            return Response(json.dumps({
+                'message': 'Body provided by request but room not found.',
+                'status': 400,
+            }), status=400, mimetype='application/json')
+        room = data['room']
     for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
         for filename in filenames:
             os.system('gdal2tiles.py ' + os.path.join(dirpath, filename) + ' ' + os.path.join(constants.PROCESSED_FOLDER, filename))
-    print(sum(1 for files in os.walk(constants.UPLOADED_FOLDER) for _ in files[2]))
+            files_counter += 1
+            socketio.emit('message', str(total_files) + '/' + str(files_counter), room=room)
     return 'Done Retiling!'
 
 @bp.route('list', methods=['GET'])

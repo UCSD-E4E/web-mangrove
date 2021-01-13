@@ -1,4 +1,5 @@
 Flask
+flask-socketio
 GDAL==3.0
 pytest
 pylint
