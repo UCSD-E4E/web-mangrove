@@ -51,6 +51,7 @@ def retile_files():
     room = None
     if content_type == 'application/json':
         data = request.get_json()
+        print(data)
         if 'room' not in data:
             return Response(json.dumps({
                 'message': 'Body provided by request but room not found.',
@@ -61,7 +62,7 @@ def retile_files():
         for filename in filenames:
             os.system('gdal2tiles.py ' + os.path.join(dirpath, filename) + ' ' + os.path.join(constants.PROCESSED_FOLDER, filename))
             files_counter += 1
-            socketio.emit('message', str(total_files) + '/' + str(files_counter), room=room)
+            socketio.emit('message', str(files_counter) + '/' + str(total_files), room=room)
     return 'Done Retiling!'
 
 @bp.route('list', methods=['GET'])
