@@ -1,10 +1,10 @@
 import React from 'react';
-import { Menu } from "antd";
-import './index.scss';
+import { Menu } from 'antd';
+import styles from './index.module.scss';
 
 const Navbar: React.FC = () => {
   return (
-    <Menu mode="inline" className="navbar">
+    <Menu mode="horizontal" className={styles.navbar}>
       <Menu.Item>Home</Menu.Item>
       <Menu.Item>Upload</Menu.Item>
       <Menu.Item>Classify</Menu.Item>
