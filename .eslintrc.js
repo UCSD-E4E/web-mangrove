@@ -15,5 +15,6 @@ module.exports = {
   ignorePatterns: [
     '.eslintrc.js',
     '.prettierrc.js',
+    'craco.config.js',
   ],
 };
