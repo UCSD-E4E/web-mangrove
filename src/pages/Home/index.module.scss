@@ -1,0 +1,8 @@
+.process {
+  display: flex;
+}
+
+.process > * {
+  flex: 1;
+  padding: 2em
+}

@@ -1,9 +1,9 @@
 .cover {
   align-items: center;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 400px;
 }
 
 .header {

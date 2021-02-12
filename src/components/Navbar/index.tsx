@@ -2,9 +2,13 @@ import React from 'react';
 import { Menu } from 'antd';
 import styles from './index.module.scss';
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  menuClickHandler: any;
+}
+
+const Navbar: React.FC<NavbarProps> = (props) => {
   return (
-    <Menu mode="horizontal" className={styles.navbar}>
+    <Menu mode="horizontal" className={styles.navbar} onClick={props.menuClickHandler}>
       <Menu.Item>Home</Menu.Item>
       <Menu.Item>Upload</Menu.Item>
       <Menu.Item>Classify</Menu.Item>
