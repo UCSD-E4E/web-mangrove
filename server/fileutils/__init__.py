@@ -1,4 +1,5 @@
 import os
+import shutil
 from io import BytesIO
 import zipfile
 import json
@@ -69,11 +70,13 @@ def retile_files():
                     if inchar.isnumeric():
                         progress += inchar
                     elif progress != '':
-                        socketio.emit('message', progress, room=room)
+                        socketio.emit('message', 'Retiling:' + str((100 * files_counter + int(progress)) / total_files), room=room)
                         progress = ''
                 if inchar == '' and p.poll() != None:
                     break
             files_counter += 1
+    shutil.rmtree(constants.UPLOADED_FOLDER)
+    socketio.emit('message', 'Done Retiling:100', room=room)
     return 'Done Retiling!'
 
 @bp.route('list', methods=['GET'])
