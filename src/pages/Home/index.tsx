@@ -2,6 +2,7 @@ import React from 'react';
 import Classify from '../../components/Classify';
 import Cover from '../../components/Cover';
 import Upload from '../../components/Upload';
+import Visualize from '../../components/Visualize';
 import styles from './index.module.scss';
 
 const Home: React.FC = () => {
@@ -12,6 +13,7 @@ const Home: React.FC = () => {
         <Upload />
         <Classify />
       </div>
+      <Visualize />
     </>
   );
 };
