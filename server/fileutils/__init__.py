@@ -2,6 +2,7 @@ import os
 from io import BytesIO
 import zipfile
 import json
+import subprocess
 from time import time
 from flask import Blueprint, request, Response
 
@@ -60,9 +61,19 @@ def retile_files():
         room = data['room']
     for dirpath, _, filenames in os.walk(constants.UPLOADED_FOLDER):
         for filename in filenames:
-            os.system('gdal2tiles.py ' + os.path.join(dirpath, filename) + ' ' + os.path.join(constants.PROCESSED_FOLDER, filename))
+            p = subprocess.Popen(['gdal_retile.py', '-targetDir', constants.PROCESSED_FOLDER, os.path.join(dirpath, filename)], stdout=subprocess.PIPE, shell=False)
+            progress = ''
+            while True:
+                inchar = p.stdout.read(1).decode('utf-8')
+                if inchar != '':
+                    if inchar.isnumeric():
+                        progress += inchar
+                    elif progress != '':
+                        socketio.emit('message', progress, room=room)
+                        progress = ''
+                if inchar == '' and p.poll() != None:
+                    break
             files_counter += 1
-            socketio.emit('message', str(files_counter) + '/' + str(total_files), room=room)
     return 'Done Retiling!'
 
 @bp.route('list', methods=['GET'])
