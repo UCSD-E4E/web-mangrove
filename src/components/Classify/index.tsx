@@ -1,18 +1,23 @@
 import React from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { Progress } from 'antd';
+import styles from './index.module.scss';
 
 const Classify: React.FC = () => {
   const [socketId, setSocketId] = React.useState<string>();
+  const [stage, setStage] = React.useState<string>();
+  const [progress, setProgress] = React.useState<number>();
 
   React.useEffect(() => {
     const socket = io('http://localhost:5000');
     socket.on('connect', () => {
       setSocketId(socket.id);
     });
-    socket.on('message', (data: any) => {
-      const progress = document.getElementById('retile-progress')!;
-      progress.innerHTML = `Progress: ${data}`;
+    socket.on('message', (data: string) => {
+      const [progressType, progressNumber] = data.split(':');
+      setStage(progressType);
+      setProgress(parseInt(progressNumber, 10));
     });
   }, []);
 
@@ -29,9 +34,10 @@ const Classify: React.FC = () => {
           axios.post('http://localhost:5000/files/retile', { room: socketId }).catch(() => {});
         }}
       >
-        Retile
+        Classify
       </button>
-      <span id="retile-progress">Progress: </span>
+      <Progress percent={progress} className={styles.progress} />
+      <span>{stage}</span>
     </div>
   );
 };
